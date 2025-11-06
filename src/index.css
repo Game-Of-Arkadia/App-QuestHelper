@@ -1,3 +1,16 @@
+@font-face {
+  font-family: 'minecraft';
+  src: url('./assets/font/Minecraft.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.preview-no-bold,
+.preview-no-bold * {
+  font-weight: 400;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -353,7 +353,7 @@ export const DialogueBuilder = () => {
                         {line.text && (
                           <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded border border-border">
                             <div className="font-medium mb-3">Preview (text wrap each lines) :</div>
-                            <pre className="font-mono whitespace-pre-wrap">{wrapTextAt(line.text, maxCharSize)}</pre>
+                            <pre className="whitespace-pre-wrap font-mono font-normal">{wrapTextAt(line.text, maxCharSize)}</pre>
                           </div>
                         )}
 
