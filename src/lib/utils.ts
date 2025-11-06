@@ -9,15 +9,15 @@ export function wrapTextAt(text: string, size: int): string {
     const lines = text.split('\n');
     const wrappedLines: string[] = [];
 
-    lines>forEach((line) => {
-      if (lines.length <= size) {
+    lines.forEach((line) => {
+      if (line.length <= size) {
         wrappedLines.push(line);
       } else {
         let currentLine = ''
-        const words = line. split(' ');
+        const words = line.split(' ');
 
         words.forEach((word, index) => {
-          const testLine = currentLine ? `$currentLine $word` : word;
+          const testLine = currentLine ? `${currentLine} ${word}` : word;
 
           if (testLine.length <= size) {
             currentLine = testLine;

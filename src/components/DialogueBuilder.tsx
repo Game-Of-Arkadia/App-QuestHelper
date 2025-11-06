@@ -12,6 +12,7 @@ import { useState } from 'react';
 
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { wrapTextAt } from '@/lib/utils';
 
 export const DialogueBuilder = () => {
   const {
@@ -344,9 +345,16 @@ export const DialogueBuilder = () => {
                           onChange={(e) => handleUpdateLine(line.id, { text: e.target.value })}
                           placeholder="Enter line..."
                           rows={4}
-                          className="resize-none"
+                          className="resize-none font-mono text-sm"
                           // maxLength={maxCharSize} for automatically force to stop to the character number
                         />
+
+                        {line.text && (
+                          <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded border border-border">
+                            <div className="font-medium mb-3">Preview (text wrap each lines) :</div>
+                            <pre className="font-mono whitespace-pre-wrap">{wrapTextAt(line.text, maxCharSize)}</pre>
+                          </div>
+                        )}
 
                         {line.text.split(/\r?\n/).some(l => l.length > maxCharSize) && (
                           <p className="text-xs text-destructive mt-1">
