@@ -126,7 +126,8 @@ export const DialogueBuilder = () => {
 
         const filename = `${index + 1}.yml`;
         const nextLineExists = index < conv.dialogue.length - 1;
-        const lineArray = line.text.split('\n').map(l => l.trim()).filter(l => l);
+        const wrappedText = wrapTextAt(line.text, maxCharSize);
+        const lineArray = wrappedText.split('\n').map(l => l.trim()).filter(l => l);
 
         let yamlContent = `${characterYaml}\n"Dialogue":\n  "1":\n    "lines":\n`;
         lineArray.forEach(l => {
