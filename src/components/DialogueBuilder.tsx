@@ -357,11 +357,6 @@ export const DialogueBuilder = () => {
                           </div>
                         )}
 
-                        {line.text.split(/\r?\n/).some(l => l.length > maxCharSize) && (
-                          <p className="text-xs text-destructive mt-1">
-                            ⚠️ One of the lines may not fit in the exported box.
-                          </p>
-                        )}
                       </div>
 
                       <div className="flex items-center gap-4 text-sm">
