@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/sidebar';
 import { CharacterList } from './CharacterList';
 import { QuestList } from './QuestList';
+import arkadiaLogo from '../assets/img/logo.png';
 
 export const AppSidebar = () => {
   return (
@@ -15,7 +16,7 @@ export const AppSidebar = () => {
         <div className="mb-6">
           <div className="flex items-center gap-2 px-2 mb-4">
             <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+              <img src={arkadiaLogo} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-lg font-bold text-foreground">QuestHelper</h1>
           </div>
