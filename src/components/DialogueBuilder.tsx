@@ -263,7 +263,7 @@ export const DialogueBuilder = () => {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between p-4 border-b border-border bg-card">
+          <div className="flex items-center p-4 border-b border-border bg-card">
             <Input
               value={activeConversation.title}
               onChange={(e) =>
@@ -271,10 +271,6 @@ export const DialogueBuilder = () => {
               }
               className="text-base font-medium max-w-sm border-none shadow-none px-0 focus-visible:ring-0"
             />
-            <Button size="sm" onClick={handleAddLine}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Line
-            </Button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -466,6 +462,12 @@ export const DialogueBuilder = () => {
                 );
               })
             )}
+          </div>
+          <div className="fixed bottom-4 right-4 z-10">
+            <Button size="lg" onClick={handleAddLine} className="shadow-lg">
+              <Plus className="h-5 w-5 mr-2" />
+              Add New Line
+            </Button>
           </div>
         </>
       )}

@@ -25,7 +25,7 @@ interface DialogueContextType {
 
 const DialogueContext = createContext<DialogueContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'dialogue-builder-data';
+const STORAGE_KEY = 'Cookie_thats_stealing_all_your_data';
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
