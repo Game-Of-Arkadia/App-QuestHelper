@@ -184,18 +184,30 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const addDialogueLine = (questId: string, conversationId: string, line: Omit<DialogueLine, 'id'>) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? {
-              ...q,
-              conversations: q.conversations.map(c =>
-                c.id === conversationId
-                  ? { ...c, dialogue: [...c.dialogue, { ...line, id: generateUUID() }] }
-                  : c
-              ),
-            }
-          : q
-      ),
+      quests: prev.quests.map(q => {
+        if (q.id !== questId) return q;
+
+        return {
+          ...q,
+          conversations: q.conversations.map(c => {
+            if (c.id !== conversationId) return c;
+
+            const lastLine = c.dialogue[c.dialogue.length - 1];
+
+            const newLine = {
+              ...line,
+              characterId: lastLine?.characterId ?? line.characterId,
+              displayName: lastLine?.displayName ?? line.displayName,
+              id: generateUUID(),
+            };
+
+            return {
+              ...c,
+              dialogue: [...c.dialogue, newLine],
+            };
+          }),
+        };
+      }),
     }));
   };
 
