@@ -14,7 +14,7 @@ export function Toaster() {
               {description && <ToastDescription>{description}</ToastDescription>}
             </div>
             {action}
-            <ToastClose />
+            <ToastClose className="absolute right-2 top-2" />
           </Toast>
         );
       })}
