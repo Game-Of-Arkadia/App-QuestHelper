@@ -1,0 +1,30 @@
+name: Test if TypeScript web app runs
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-app:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start the app
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:8082
+
+      - name: Test if app is running
+        run: |
+          curl -f http://localhost:8082 || (echo "App did not start properly" && exit 1)
