@@ -46,7 +46,7 @@ export const CharacterDialog = ({ open, onOpenChange, character, onSave }: Chara
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Tavernier"
+              placeholder="Name of your character"
             />
           </div>
           <div className="space-y-2">
