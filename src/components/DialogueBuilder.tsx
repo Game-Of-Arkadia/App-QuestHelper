@@ -46,6 +46,7 @@ export const DialogueBuilder = () => {
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
         <FolderOpen className="h-16 w-16 mb-4 opacity-50" />
         <p className="text-lg font-medium">No quest selected</p>
+         <p className="text-sm font-small">Please create one on the left  to start building.</p>
       </div>
     );
   }
@@ -248,7 +249,7 @@ export const DialogueBuilder = () => {
             </div>
           ))}
           {activeQuest.conversations.length === 0 && (
-            <p className="text-sm text-muted-foreground italic">No conversations created. Click "Create" to create it.</p>
+            <p className="text-sm text-muted-foreground italic">No conversations created. Click "Create" to create one.</p>
           )}
         </div>
       </div>
@@ -258,7 +259,7 @@ export const DialogueBuilder = () => {
           <div className="text-center">
             <MessageSquare className="h-12 w-12 mb-3 mx-auto opacity-50" />
             <p className="text-lg font-medium">No conversation selected</p>
-            <p className="text-sm mt-1">Select or create a conversation to add dialogue</p>
+            <p className="text-sm mt-1">Select or create a conversation to add dialogues</p>
           </div>
         </div>
       ) : (
@@ -276,8 +277,8 @@ export const DialogueBuilder = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {activeConversation.dialogue.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                <p className="text-lg font-medium">No Lines Yet</p>
-                <p className="text-sm mt-1">Click "Add New Line" to create the first line.</p>
+                <p className="text-lg font-medium">No Dialogue Yet</p>
+                <p className="text-sm mt-1">Click "Add New Line" to create the first dialogue.</p>
               </div>
             ) : (
               activeConversation.dialogue.map((line, index) => {
