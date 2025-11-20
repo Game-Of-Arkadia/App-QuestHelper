@@ -1,7 +1,6 @@
 name: Test if TypeScript web app runs
 
 on:
-  push:
   pull_request:
 
 jobs:
