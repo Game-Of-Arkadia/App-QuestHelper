@@ -32,7 +32,7 @@ export const CharacterList = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (data.characters.length === 1) {
+    if (data[data.version].characters.length === 1) {
       toast({ title: 'Cannot delete last character', variant: 'destructive' });
       return;
     }
@@ -50,7 +50,7 @@ export const CharacterList = () => {
       </div>
 
       <div className="space-y-1">
-        {data.characters.map((character) => (
+        {data[data.version].characters.map((character) => (
           <div
             key={character.id}
             className="group flex items-start gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-accent/50"

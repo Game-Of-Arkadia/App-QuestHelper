@@ -34,10 +34,17 @@ export interface Quest {
 
 export type Version = 'v1' | 'v2' | 'v3';
 
-export interface AppData {
+export interface VersionData {
   characters: Character[];
   quests: Quest[];
   activeQuestId: string | null;
   activeConversationId: string | null;
   version: Version;
+}
+
+export interface AppData {
+  version: Version;
+  v1: VersionData;
+  v2: VersionData;
+  v3: VersionData;
 }

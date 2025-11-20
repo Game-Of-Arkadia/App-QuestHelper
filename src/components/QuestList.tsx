@@ -59,11 +59,11 @@ export const QuestList = () => {
 
       <ScrollArea className="flex-1">
         <div className="space-y-1 px-2">
-          {data.quests.map((quest) => (
+          {data[data.version].quests.map((quest) => (
             <div
               key={quest.id}
               className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
-                data.activeQuestId === quest.id
+                data[data.version].activeQuestId === quest.id
                   ? 'bg-accent text-accent-foreground'
                   : 'hover:bg-muted'
               }`}

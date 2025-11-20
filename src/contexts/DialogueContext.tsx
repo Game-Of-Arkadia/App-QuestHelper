@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AppData, Character, Conversation, DialogueLine, Answer, Quest, Version } from '@/types/dialogue';
+import { AppData, Character, Conversation, DialogueLine, Answer, Quest, Version, VersionData } from '@/types/dialogue';
 
 interface DialogueContextType {
   data: AppData;
@@ -39,8 +39,34 @@ function generateUUID() {
 const getInitialData = (): AppData => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
-    return JSON.parse(stored);
+    const parsedData = JSON.parse(stored);
+    // Migrate old data to new version
+    if (parsedData.characters && !parsedData.v1) {
+      const oldData = {
+        characters: parsedData.characters,
+        quests: parsedData.quests,
+        activeQuestId: parsedData.activeQuestId,
+        activeConversationId: parsedData.activeConversationId,
+      };
+      return {
+        version: parsedData.version || 'v1',
+        v1: oldData,
+        v2: createDefaultVersionData('Quest for v2'),
+        v3: createDefaultVersionData('Welcome to v3 !'),
+      };
+    }
+    return parsedData;
   }
+  
+  return {
+    version: 'v1' as Version,
+    v1: createDefaultVersionData('Default v1 Quest'),
+    v2: createDefaultVersionData('Quest for v2'),
+    v3: createDefaultVersionData('Welcome to v3 !'),
+  };
+};
+
+const createDefaultVersionData = (defaultName: string): VersionData => {
   
   // Default data
   const ambiantChar: Character = {
@@ -65,7 +91,7 @@ const getInitialData = (): AppData => {
   
   const defaultQuest: Quest = {
     id: crypto.randomUUID(),
-    title: 'Default Quest',
+    title: defaultName,
     conversations: [defaultConversation],
   };
   
@@ -74,7 +100,15 @@ const getInitialData = (): AppData => {
     quests: [defaultQuest],
     activeQuestId: "None",
     activeConversationId: "None",
-    version: 'v1' as Version,
+  };
+};
+
+const createEmptyVersionData = (): VersionData => {
+  return {
+    characters: [],
+    quests: [],
+    activeQuestId: null,
+    activeConversationId: null,
   };
 };
 
@@ -89,280 +123,345 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     setData(prev => ({ ...prev, version }));
   };
 
+
   const addCharacter = (character: Omit<Character, 'id'>) => {
     setData(prev => ({
       ...prev,
-      characters: [...prev.characters, { ...character, id: generateUUID() }],
+      [prev.version]: {
+        ...prev[prev.version],
+        characters: [...prev[prev.version].characters, { ...character, id: crypto.randomUUID() }],
+      },
     }));
   };
 
   const updateCharacter = (id: string, updates: Partial<Character>) => {
     setData(prev => ({
       ...prev,
-      characters: prev.characters.map(c => c.id === id ? { ...c, ...updates } : c),
+      [prev.version]: {
+        ...prev[prev.version],
+        characters: prev[prev.version].characters.map(c => c.id === id ? { ...c, ...updates } : c),
+      },
     }));
   };
 
   const deleteCharacter = (id: string) => {
     setData(prev => ({
       ...prev,
-      characters: prev.characters.filter(c => c.id !== id),
+      [prev.version]: {
+        ...prev[prev.version],
+        characters: prev[prev.version].characters.filter(c => c.id !== id),
+      },
     }));
   };
 
   const addQuest = (title: string) => {
     const newQuest: Quest = {
-      id: generateUUID(),
+      id: crypto.randomUUID(),
       title,
       conversations: [],
     };
     setData(prev => ({
       ...prev,
-      quests: [...prev.quests, newQuest],
-      activeQuestId: newQuest.id,
-      activeConversationId: null,
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: [...prev[prev.version].quests, newQuest],
+        activeQuestId: newQuest.id,
+        activeConversationId: null,
+      },
     }));
   };
 
   const updateQuest = (id: string, updates: Partial<Quest>) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q => q.id === id ? { ...q, ...updates } : q),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q => q.id === id ? { ...q, ...updates } : q),
+      },
     }));
   };
 
   const deleteQuest = (id: string) => {
     setData(prev => {
-      const filtered = prev.quests.filter(q => q.id !== id);
+      const newActiveQuestId = prev[prev.version].activeQuestId === id 
+        ? prev[prev.version].quests.find(q => q.id !== id)?.id || null
+        : prev[prev.version].activeQuestId;
+      const newActiveConversationId = prev[prev.version].activeQuestId === id ? null : prev[prev.version].activeConversationId;
+      
       return {
         ...prev,
-        quests: filtered,
-        activeQuestId: prev.activeQuestId === id ? (filtered[0]?.id || null) : prev.activeQuestId,
-        activeConversationId: prev.activeQuestId === id ? null : prev.activeConversationId,
+        [prev.version]: {
+          ...prev[prev.version],
+          quests: prev[prev.version].quests.filter(q => q.id !== id),
+          activeQuestId: newActiveQuestId,
+          activeConversationId: newActiveConversationId,
+        },
       };
     });
   };
 
   const setActiveQuest = (id: string) => {
-    setData(prev => ({ 
-      ...prev, 
-      activeQuestId: id,
-      activeConversationId: null,
+    setData(prev => ({
+      ...prev,
+      [prev.version]: {
+        ...prev[prev.version],
+        activeQuestId: id,
+        activeConversationId: null,
+      },
     }));
   };
 
   const addConversation = (questId: string, title: string) => {
     const newConversation: Conversation = {
-      id: generateUUID(),
+      id: crypto.randomUUID(),
       title,
       dialogue: [],
     };
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? { ...q, conversations: [...q.conversations, newConversation] }
-          : q
-      ),
-      activeConversationId: newConversation.id,
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? { ...q, conversations: [...q.conversations, newConversation] }
+            : q
+        ),
+        activeConversationId: newConversation.id,
+      },
     }));
   };
 
   const updateConversation = (questId: string, conversationId: string, updates: Partial<Conversation>) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? { ...q, conversations: q.conversations.map(c => c.id === conversationId ? { ...c, ...updates } : c) }
-          : q
-      ),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? {
+                ...q,
+                conversations: q.conversations.map(c =>
+                  c.id === conversationId ? { ...c, ...updates } : c
+                ),
+              }
+            : q
+        ),
+      },
     }));
   };
 
   const deleteConversation = (questId: string, conversationId: string) => {
-    setData(prev => ({
-      ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? { ...q, conversations: q.conversations.filter(c => c.id !== conversationId) }
-          : q
-      ),
-      activeConversationId: prev.activeConversationId === conversationId ? null : prev.activeConversationId,
-    }));
+    setData(prev => {
+      const newActiveConversationId = prev[prev.version].activeConversationId === conversationId ? null : prev[prev.version].activeConversationId;
+      
+      return {
+        ...prev,
+        [prev.version]: {
+          ...prev[prev.version],
+          quests: prev[prev.version].quests.map(q =>
+            q.id === questId
+              ? { ...q, conversations: q.conversations.filter(c => c.id !== conversationId) }
+              : q
+          ),
+          activeConversationId: newActiveConversationId,
+        },
+      };
+    });
   };
 
   const setActiveConversation = (id: string) => {
-    setData(prev => ({ ...prev, activeConversationId: id }));
+    setData(prev => ({
+      ...prev,
+      [prev.version]: {
+        ...prev[prev.version],
+        activeConversationId: id,
+      },
+    }));
   };
 
   const addDialogueLine = (questId: string, conversationId: string, line: Omit<DialogueLine, 'id'>) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q => {
-        if (q.id !== questId) return q;
-
-        return {
-          ...q,
-          conversations: q.conversations.map(c => {
-            if (c.id !== conversationId) return c;
-
-            const lastLine = c.dialogue[c.dialogue.length - 1];
-
-            const newLine = {
-              ...line,
-              characterId: lastLine?.characterId ?? line.characterId,
-              displayName: lastLine?.displayName ?? line.displayName,
-              id: generateUUID(),
-            };
-
-            return {
-              ...c,
-              dialogue: [...c.dialogue, newLine],
-            };
-          }),
-        };
-      }),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? {
+                ...q,
+                conversations: q.conversations.map(c =>
+                  c.id === conversationId
+                    ? { ...c, dialogue: [...c.dialogue, { ...line, id: crypto.randomUUID() }] }
+                    : c
+                ),
+              }
+            : q
+        ),
+      },
     }));
   };
 
   const updateDialogueLine = (questId: string, conversationId: string, lineId: string, updates: Partial<DialogueLine>) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? {
-              ...q,
-              conversations: q.conversations.map(c =>
-                c.id === conversationId
-                  ? {
-                      ...c,
-                      dialogue: c.dialogue.map(line =>
-                        line.id === lineId ? { ...line, ...updates } : line
-                      ),
-                    }
-                  : c
-              ),
-            }
-          : q
-      ),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? {
+                ...q,
+                conversations: q.conversations.map(c =>
+                  c.id === conversationId
+                    ? {
+                        ...c,
+                        dialogue: c.dialogue.map(l =>
+                          l.id === lineId ? { ...l, ...updates } : l
+                        ),
+                      }
+                    : c
+                ),
+              }
+            : q
+        ),
+      },
     }));
   };
 
   const deleteDialogueLine = (questId: string, conversationId: string, lineId: string) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? {
-              ...q,
-              conversations: q.conversations.map(c =>
-                c.id === conversationId
-                  ? { ...c, dialogue: c.dialogue.filter(line => line.id !== lineId) }
-                  : c
-              ),
-            }
-          : q
-      ),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? {
+                ...q,
+                conversations: q.conversations.map(c =>
+                  c.id === conversationId
+                    ? { ...c, dialogue: c.dialogue.filter(l => l.id !== lineId) }
+                    : c
+                ),
+              }
+            : q
+        ),
+      },
     }));
   };
 
   const reorderDialogue = (questId: string, conversationId: string, fromIndex: number, toIndex: number) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? {
-              ...q,
-              conversations: q.conversations.map(c => {
-                if (c.id !== conversationId) return c;
-                const newDialogue = [...c.dialogue];
-                const [moved] = newDialogue.splice(fromIndex, 1);
-                newDialogue.splice(toIndex, 0, moved);
-                return { ...c, dialogue: newDialogue };
-              }),
-            }
-          : q
-      ),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? {
+                ...q,
+                conversations: q.conversations.map(c => {
+                  if (c.id !== conversationId) return c;
+                  const newDialogue = [...c.dialogue];
+                  const [moved] = newDialogue.splice(fromIndex, 1);
+                  newDialogue.splice(toIndex, 0, moved);
+                  return { ...c, dialogue: newDialogue };
+                }),
+              }
+            : q
+        ),
+      },
     }));
   };
 
   const addAnswer = (questId: string, conversationId: string, lineId: string, answer: Omit<Answer, 'id'>) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? {
-              ...q,
-              conversations: q.conversations.map(c =>
-                c.id === conversationId
-                  ? {
-                      ...c,
-                      dialogue: c.dialogue.map(line =>
-                        line.id === lineId
-                          ? { ...line, answers: [...(line.answers || []), { ...answer, id: generateUUID() }] }
-                          : line
-                      ),
-                    }
-                  : c
-              ),
-            }
-          : q
-      ),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? {
+                ...q,
+                conversations: q.conversations.map(c =>
+                  c.id === conversationId
+                    ? {
+                        ...c,
+                        dialogue: c.dialogue.map(l =>
+                          l.id === lineId
+                            ? {
+                                ...l,
+                                answers: [...(l.answers || []), { ...answer, id: crypto.randomUUID() }],
+                              }
+                            : l
+                        ),
+                      }
+                    : c
+                ),
+              }
+            : q
+        ),
+      },
     }));
   };
 
   const updateAnswer = (questId: string, conversationId: string, lineId: string, answerId: string, updates: Partial<Answer>) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? {
-              ...q,
-              conversations: q.conversations.map(c =>
-                c.id === conversationId
-                  ? {
-                      ...c,
-                      dialogue: c.dialogue.map(line =>
-                        line.id === lineId
-                          ? {
-                              ...line,
-                              answers: line.answers?.map(answer =>
-                                answer.id === answerId ? { ...answer, ...updates } : answer
-                              ),
-                            }
-                          : line
-                      ),
-                    }
-                  : c
-              ),
-            }
-          : q
-      ),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? {
+                ...q,
+                conversations: q.conversations.map(c =>
+                  c.id === conversationId
+                    ? {
+                        ...c,
+                        dialogue: c.dialogue.map(l =>
+                          l.id === lineId
+                            ? {
+                                ...l,
+                                answers: l.answers?.map(a =>
+                                  a.id === answerId ? { ...a, ...updates } : a
+                                ),
+                              }
+                            : l
+                        ),
+                      }
+                    : c
+                ),
+              }
+            : q
+        ),
+      },
     }));
   };
 
   const deleteAnswer = (questId: string, conversationId: string, lineId: string, answerId: string) => {
     setData(prev => ({
       ...prev,
-      quests: prev.quests.map(q =>
-        q.id === questId
-          ? {
-              ...q,
-              conversations: q.conversations.map(c =>
-                c.id === conversationId
-                  ? {
-                      ...c,
-                      dialogue: c.dialogue.map(line =>
-                        line.id === lineId
-                          ? { ...line, answers: line.answers?.filter(answer => answer.id !== answerId) }
-                          : line
-                      ),
-                    }
-                  : c
-              ),
-            }
-          : q
-      ),
+      [prev.version]: {
+        ...prev[prev.version],
+        quests: prev[prev.version].quests.map(q =>
+          q.id === questId
+            ? {
+                ...q,
+                conversations: q.conversations.map(c =>
+                  c.id === conversationId
+                    ? {
+                        ...c,
+                        dialogue: c.dialogue.map(l =>
+                          l.id === lineId
+                            ? {
+                                ...l,
+                                answers: l.answers?.filter(a => a.id !== answerId),
+                              }
+                            : l
+                        ),
+                      }
+                    : c
+                ),
+              }
+            : q
+        ),
+      },
     }));
   };
 
