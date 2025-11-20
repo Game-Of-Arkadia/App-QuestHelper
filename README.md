@@ -48,7 +48,7 @@ After installation, you can start QuestHelper by executing:
 npm run dev
 ```
 
-This will start the QeustHelper server, which you can access at [http://localhost:8082](http://localhost:8082)
+This will start the QuestHelper server, which you can access at [http://localhost:8082](http://localhost:8082)
 
 
 ## 🐳 Configure QuestHelper as a service
