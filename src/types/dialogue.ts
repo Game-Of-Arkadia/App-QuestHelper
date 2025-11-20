@@ -32,9 +32,12 @@ export interface Quest {
   conversations: Conversation[];
 }
 
+export type Version = 'v1' | 'v2' | 'v3';
+
 export interface AppData {
   characters: Character[];
   quests: Quest[];
   activeQuestId: string | null;
   activeConversationId: string | null;
+  version: Version;
 }
