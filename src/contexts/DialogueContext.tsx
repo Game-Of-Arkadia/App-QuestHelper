@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AppData, Character, Conversation, DialogueLine, Answer, Quest } from '@/types/dialogue';
+import { AppData, Character, Conversation, DialogueLine, Answer, Quest, Version } from '@/types/dialogue';
 
 interface DialogueContextType {
   data: AppData;
+  setVersion: (version: Version) => void;
   addCharacter: (character: Omit<Character, 'id'>) => void;
   updateCharacter: (id: string, character: Partial<Character>) => void;
   deleteCharacter: (id: string) => void;
@@ -56,17 +57,24 @@ const getInitialData = (): AppData => {
     //yamlConfig: "Settings:\n  typing-speed: 1 # Ticks(Second/20)\n  range: 3\n  effect: Freeze # Slowness / Freeze\n  answer-numbers: false\n  prevent-exit: false\n  character-name: true\n  character-image: false\n  background-fog: true\nSounds:\n  typing: luxdialogues:luxdialogues.sounds.typing\n  selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n  name: 20\n  dialogue-background: 0\n  dialogue-line: 10\n  answer-background: 90\n  answer-line: 8\n  arrow: -7\n  character: -16\nCharacter:\n  name:  Default\nImages:\n  character: tavernier-avatar\n  arrow: hand\n  dialogue-background: dialogue-background\n  answer-background: answer-background-large\n  name-start: name-start\n  name-mid: name-mid\n  name-end: name-end\n  fog: fog\nColors:\n  name: '#4f4a3e'\n  name-background: '#f8ffe0'\n  dialogue: '#4f4a3e'\n  dialogue-background: '#f8ffe0'\n  answer: '#4f4a3e'\n  answer-background: '#f8ffe0'\n  arrow: '#cdff29'\n  selected: '#4f4a3e'\n  fog: '#000000'\n",
   };
 
-  /*const defaultConversation: Conversation = {
-    id: generateUUID(),
+  const defaultConversation: Conversation = {
+    id: crypto.randomUUID(),
     title: 'Introduction',
     dialogue: [],
-  };*/
+  };
+  
+  const defaultQuest: Quest = {
+    id: crypto.randomUUID(),
+    title: 'Default Quest',
+    conversations: [defaultConversation],
+  };
   
   return {
     characters: [defaultChar, ambiantChar],
-    quests: [],
+    quests: [defaultQuest],
     activeQuestId: "None",
     activeConversationId: "None",
+    version: 'v1' as Version,
   };
 };
 
@@ -76,6 +84,10 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [data]);
+
+  const setVersion = (version: Version) => {
+    setData(prev => ({ ...prev, version }));
+  };
 
   const addCharacter = (character: Omit<Character, 'id'>) => {
     setData(prev => ({
@@ -358,6 +370,7 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     <DialogueContext.Provider
       value={{
         data,
+        setVersion,
         addCharacter,
         updateCharacter,
         deleteCharacter,
