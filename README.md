@@ -45,7 +45,7 @@ This can take several minutes depending of your internet connexion.
 After installation, you can start QuestHelper by executing:
 
 ```bash
-npm run dev
+npm run app
 ```
 
 This will start the QuestHelper server, which you can access at [http://localhost:8082](http://localhost:8082)
@@ -65,7 +65,7 @@ You can customize settings using environment variables:
 
 **Example:**
 ```bash
-QUESTHELPER_HOST='0.0.0.0' QUESTHELPER_PORT=3000 QSTH_DEFAULT_VERSION='v3' npm run dev
+QUESTHELPER_HOST='0.0.0.0' QUESTHELPER_PORT=3000 QSTH_DEFAULT_VERSION='v3' npm run app
 ```
 
 Since the app only uses the root `/` path, you can safely use a custom domain or reverse proxy without conflicts.
