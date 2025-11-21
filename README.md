@@ -55,16 +55,17 @@ This will start the QuestHelper server, which you can access at [http://localhos
 
 ## Configuration
 
-By default, the app runs on `::` (all interfaces) and port `8082`. You can customize both settings using environment variables:
+You can customize settings using environment variables:
 
-| Variable | Purpose |
-|----------|---------|
-| `QUESTHELPER_HOST` | Set the host address |
-| `QUESTHELPER_PORT` | Set the port number |
+| Variable | Purpose | Default Value |
+|----------|---------|---------|
+| `QSTH_HOST` | Set the host address | `::` |
+| `QSTH_PORT` | Set the port number | `8082` |
+| `QSTH_DEFAULT_VERSION` | Set the default version of the App | `v1` |
 
 **Example:**
 ```bash
-QUESTHELPER_HOST='0.0.0.0' QUESTHELPER_PORT=3000 npm run dev
+QUESTHELPER_HOST='0.0.0.0' QUESTHELPER_PORT=3000 QSTH_DEFAULT_VERSION='v3' npm run dev
 ```
 
 Since the app only uses the root `/` path, you can safely use a custom domain or reverse proxy without conflicts.

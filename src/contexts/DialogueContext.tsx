@@ -57,9 +57,10 @@ const getInitialData = (): AppData => {
     }
     return parsedData;
   }
+  console.log('App version:',  import.meta.env.QSTH_DEFAULT_VERSION);
   
   return {
-    version: 'v1' as Version,
+    version: import.meta.env.QSTH_DEFAULT_VERSION ?? 'v1' as Version,
     v1: createDefaultVersionData('Default v1 Quest'),
     v2: createDefaultVersionData('Quest for v2'),
     v3: createDefaultVersionData('Welcome to v3 !'),
