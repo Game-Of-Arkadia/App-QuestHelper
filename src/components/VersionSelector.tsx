@@ -1,32 +1,96 @@
 import { useDialogue } from '@/contexts/DialogueContext';
-import type { Version } from '@/types/dialogue';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState } from 'react';
 
-const versions: { id: Version; label: string }[] = [
-  { id: 'v1', label: 'v1' },
-  { id: 'v2', label: 'v2' },
-  { id: 'v3', label: 'v3' },
-];
+const VERSION_COLORS = ['#f97316', '#22c55e', '#ec4899', '#3b82f6', '#a855f7', '#eab308', '#14b8a6', '#ef4444'];
 
 export const VersionSelector = () => {
-  const { data, setVersion } = useDialogue();
+  const { data, setVersion, addVersion } = useDialogue();
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [selectedColor, setSelectedColor] = useState(VERSION_COLORS[0]);
+
+  const handleCreate = () => {
+    if (name.trim()) {
+      addVersion(name.trim(), selectedColor);
+      setName('');
+      setSelectedColor(VERSION_COLORS[0]);
+      setIsOpen(false);
+    }
+  };
+
+  const versionEntries = Object.entries(data.versions);
 
   return (
-    <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
-      {versions.map((version) => (
-        <button
-          key={version.id}
-          onClick={() => setVersion(version.id)}
-          className={`
-            px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-300
-            ${data.version === version.id
-              ? 'bg-accent text-accent-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }
-          `}
-        >
-          {version.label}
-        </button>
-      ))}
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
+        {versionEntries.map(([id, versionData]) => (
+          <button
+            key={id}
+            onClick={() => setVersion(id)}
+            className={`
+              px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-300
+              ${data.currentVersion === id
+                ? 'bg-accent text-accent-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }
+            `}
+            style={data.currentVersion === id ? {
+              backgroundColor: versionData.color,
+              color: 'white',
+            } : {}}
+          >
+            {versionData.name}
+          </button>
+        ))}
+      </div>
+      
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Version</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="version-name">Version Name</Label>
+              <Input
+                id="version-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., my_version"
+                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {VERSION_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setSelectedColor(color)}
+                    className={`w-10 h-10 rounded-md transition-all ${
+                      selectedColor === color ? 'ring-2 ring-offset-2 ring-foreground scale-110' : ''
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+            <Button onClick={handleCreate} className="w-full" disabled={!name.trim()}>
+              Create Version
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AppData, Character, Conversation, DialogueLine, Answer, Quest, Version, VersionData } from '@/types/dialogue';
+import { AppData, Character, Conversation, DialogueLine, Answer, Quest, VersionData } from '@/types/dialogue';
 import { generateUUID } from '@/lib/utils';
 
 interface DialogueContextType {
   data: AppData;
-  setVersion: (version: Version) => void;
+  setVersion: (versionId: string) => void;
+  addVersion: (name: string, color: string) => void;
+  deleteVersion: (versionId: string) => void;
   addCharacter: (character: Omit<Character, 'id'>) => void;
   updateCharacter: (id: string, character: Partial<Character>) => void;
   deleteCharacter: (id: string) => void;
@@ -29,38 +31,55 @@ const DialogueContext = createContext<DialogueContextType | undefined>(undefined
 
 const STORAGE_KEY = 'Cookie_thats_stealing_all_your_data'; // W name for the storage key ?
 
+const VERSION_COLORS = ['#f97316', '#22c55e', '#ec4899', '#3b82f6', '#a855f7', '#eab308', '#14b8a6', '#ef4444'];
+
+
 const getInitialData = (): AppData => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     const parsedData = JSON.parse(stored);
-    // Migrate old data to new version
-    if (parsedData.characters && !parsedData.v1) {
-      const oldData = {
-        characters: parsedData.characters,
-        quests: parsedData.quests,
-        activeQuestId: parsedData.activeQuestId,
-        activeConversationId: parsedData.activeConversationId,
-      };
+    
+    // Migrate from old version structure to new dynamic structure
+    if (parsedData.version && parsedData.v1) {
       return {
-        version: parsedData.version || 'v1',
-        v1: oldData,
-        v2: createDefaultVersionData('Quest for v2'),
-        v3: createDefaultVersionData('Welcome to v3 !'),
+        currentVersion: 'v1',
+        versions: {
+          v1: { ...parsedData.v1, name: 'v1', color: VERSION_COLORS[0] },
+          v2: { ...parsedData.v2, name: 'v2', color: VERSION_COLORS[1] },
+          v3: { ...parsedData.v3, name: 'v3', color: VERSION_COLORS[2] },
+        },
       };
     }
+    
+    // Migrate from very old structure (no versions)
+    if (parsedData.characters && !parsedData.currentVersion) {
+      return {
+        currentVersion: 'v1',
+        versions: {
+          v1: {
+            characters: parsedData.characters,
+            quests: parsedData.quests,
+            activeQuestId: parsedData.activeQuestId,
+            activeConversationId: parsedData.activeConversationId,
+            name: 'v1',
+            color: VERSION_COLORS[0],
+          },
+        },
+      };
+    }
+    
     return parsedData;
   }
-  console.log('App version:',  import.meta.env.QSTH_DEFAULT_VERSION);
   
   return {
-    version: import.meta.env.QSTH_DEFAULT_VERSION ?? 'v1' as Version,
-    v1: createDefaultVersionData('Default v1 Quest'),
-    v2: createDefaultVersionData('Quest for v2'),
-    v3: createDefaultVersionData('Welcome to v3 !'),
+    currentVersion: 'v1',
+    versions: {
+      v1: createDefaultVersionData('v1', VERSION_COLORS[0]),
+    },
   };
 };
 
-const createDefaultVersionData = (defaultName: string): VersionData => {
+const createDefaultVersionData = (name: string, color: string): VersionData => {
   
   // Default data
   const ambiantChar: Character = {
@@ -85,24 +104,28 @@ const createDefaultVersionData = (defaultName: string): VersionData => {
 
   const defaultQuest: Quest = {
     id: crypto.randomUUID(),
-    title: defaultName,
+    title: "Default Quest",
     conversations: [defaultConversation],
   };
 
   return {
-    characters: [defaultChar, ambiantChar],
+    characters: [ambiantChar, defaultChar],
     quests: [defaultQuest],
-    activeQuestId: "None",
-    activeConversationId: "None",
+    activeQuestId: defaultQuest.id,
+    activeConversationId: defaultConversation.id,
+    name,
+    color,
   };
 };
 
-const createEmptyVersionData = (): VersionData => {
+const createEmptyVersionData = (name: string, color: string): VersionData => {
   return {
     characters: [],
     quests: [],
     activeQuestId: null,
     activeConversationId: null,
+    name,
+    color,
   };
 };
 
@@ -113,17 +136,49 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [data]);
 
-  const setVersion = (version: Version) => {
-    setData(prev => ({ ...prev, version }));
+  const setVersion = (versionId: string) => {
+    setData(prev => ({ ...prev, currentVersion: versionId }));
+  };
+
+  const addVersion = (name: string, color: string) => {
+    const versionId = crypto.randomUUID();
+    setData(prev => ({
+      ...prev,
+      currentVersion: versionId,
+      versions: {
+        ...prev.versions,
+        [versionId]: createEmptyVersionData(name, color),
+      },
+    }));
+  };
+
+  const deleteVersion = (versionId: string) => {
+    setData(prev => {
+      const versions = { ...prev.versions };
+      delete versions[versionId];
+      const versionIds = Object.keys(versions);
+      const newCurrentVersion = prev.currentVersion === versionId 
+        ? versionIds[0] || ''
+        : prev.currentVersion;
+      
+      return {
+        ...prev,
+        currentVersion: newCurrentVersion,
+        versions,
+      };
+    });
   };
 
 
   const addCharacter = (character: Omit<Character, 'id'>) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        characters: [...prev[prev.version].characters, { ...character, id: crypto.randomUUID() }],
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          characters: [...prev.versions[prev.currentVersion].characters, { ...character, id: crypto.randomUUID() }],
+        },
       },
     }));
   };
@@ -131,9 +186,12 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const updateCharacter = (id: string, updates: Partial<Character>) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        characters: prev[prev.version].characters.map(c => c.id === id ? { ...c, ...updates } : c),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          characters: prev.versions[prev.currentVersion].characters.map(c => c.id === id ? { ...c, ...updates } : c),
+        },
       },
     }));
   };
@@ -141,9 +199,12 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const deleteCharacter = (id: string) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        characters: prev[prev.version].characters.filter(c => c.id !== id),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          characters: prev.versions[prev.currentVersion].characters.filter(c => c.id !== id),
+        },
       },
     }));
   };
@@ -156,11 +217,14 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     };
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: [...prev[prev.version].quests, newQuest],
-        activeQuestId: newQuest.id,
-        activeConversationId: null,
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: [...prev.versions[prev.currentVersion].quests, newQuest],
+          activeQuestId: newQuest.id,
+          activeConversationId: null,
+        },
       },
     }));
   };
@@ -168,27 +232,34 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const updateQuest = (id: string, updates: Partial<Quest>) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q => q.id === id ? { ...q, ...updates } : q),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q => q.id === id ? { ...q, ...updates } : q),
+        },
       },
     }));
   };
 
   const deleteQuest = (id: string) => {
     setData(prev => {
-      const newActiveQuestId = prev[prev.version].activeQuestId === id 
-        ? prev[prev.version].quests.find(q => q.id !== id)?.id || null
-        : prev[prev.version].activeQuestId;
-      const newActiveConversationId = prev[prev.version].activeQuestId === id ? null : prev[prev.version].activeConversationId;
+      const currentVer = prev.versions[prev.currentVersion];
+      const newActiveQuestId = currentVer.activeQuestId === id 
+        ? currentVer.quests.find(q => q.id !== id)?.id || null
+        : currentVer.activeQuestId;
+      const newActiveConversationId = currentVer.activeQuestId === id ? null : currentVer.activeConversationId;
       
       return {
         ...prev,
-        [prev.version]: {
-          ...prev[prev.version],
-          quests: prev[prev.version].quests.filter(q => q.id !== id),
-          activeQuestId: newActiveQuestId,
-          activeConversationId: newActiveConversationId,
+        versions: {
+          ...prev.versions,
+          [prev.currentVersion]: {
+            ...currentVer,
+            quests: currentVer.quests.filter(q => q.id !== id),
+            activeQuestId: newActiveQuestId,
+            activeConversationId: newActiveConversationId,
+          },
         },
       };
     });
@@ -197,10 +268,13 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const setActiveQuest = (id: string) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        activeQuestId: id,
-        activeConversationId: null,
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          activeQuestId: id,
+          activeConversationId: null,
+        },
       },
     }));
   };
@@ -213,14 +287,17 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     };
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? { ...q, conversations: [...q.conversations, newConversation] }
-            : q
-        ),
-        activeConversationId: newConversation.id,
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? { ...q, conversations: [...q.conversations, newConversation] }
+              : q
+          ),
+          activeConversationId: newConversation.id,
+        },
       },
     }));
   };
@@ -228,36 +305,43 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const updateConversation = (questId: string, conversationId: string, updates: Partial<Conversation>) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? {
-                ...q,
-                conversations: q.conversations.map(c =>
-                  c.id === conversationId ? { ...c, ...updates } : c
-                ),
-              }
-            : q
-        ),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? {
+                  ...q,
+                  conversations: q.conversations.map(c =>
+                    c.id === conversationId ? { ...c, ...updates } : c
+                  ),
+                }
+              : q
+          ),
+        },
       },
     }));
   };
 
   const deleteConversation = (questId: string, conversationId: string) => {
     setData(prev => {
-      const newActiveConversationId = prev[prev.version].activeConversationId === conversationId ? null : prev[prev.version].activeConversationId;
+      const currentVer = prev.versions[prev.currentVersion];
+      const newActiveConversationId = currentVer.activeConversationId === conversationId ? null : currentVer.activeConversationId;
       
       return {
         ...prev,
-        [prev.version]: {
-          ...prev[prev.version],
-          quests: prev[prev.version].quests.map(q =>
-            q.id === questId
-              ? { ...q, conversations: q.conversations.filter(c => c.id !== conversationId) }
-              : q
-          ),
-          activeConversationId: newActiveConversationId,
+        versions: {
+          ...prev.versions,
+          [prev.currentVersion]: {
+            ...currentVer,
+            quests: currentVer.quests.map(q =>
+              q.id === questId
+                ? { ...q, conversations: q.conversations.filter(c => c.id !== conversationId) }
+                : q
+            ),
+            activeConversationId: newActiveConversationId,
+          },
         },
       };
     });
@@ -266,9 +350,12 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const setActiveConversation = (id: string) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        activeConversationId: id,
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          activeConversationId: id,
+        },
       },
     }));
   };
@@ -276,20 +363,23 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const addDialogueLine = (questId: string, conversationId: string, line: Omit<DialogueLine, 'id'>) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? {
-                ...q,
-                conversations: q.conversations.map(c =>
-                  c.id === conversationId
-                    ? { ...c, dialogue: [...c.dialogue, { ...line, id: crypto.randomUUID() }] }
-                    : c
-                ),
-              }
-            : q
-        ),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? {
+                  ...q,
+                  conversations: q.conversations.map(c =>
+                    c.id === conversationId
+                      ? { ...c, dialogue: [...c.dialogue, { ...line, id: crypto.randomUUID() }] }
+                      : c
+                  ),
+                }
+              : q
+          ),
+        },
       },
     }));
   };
@@ -297,25 +387,28 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const updateDialogueLine = (questId: string, conversationId: string, lineId: string, updates: Partial<DialogueLine>) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? {
-                ...q,
-                conversations: q.conversations.map(c =>
-                  c.id === conversationId
-                    ? {
-                        ...c,
-                        dialogue: c.dialogue.map(l =>
-                          l.id === lineId ? { ...l, ...updates } : l
-                        ),
-                      }
-                    : c
-                ),
-              }
-            : q
-        ),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? {
+                  ...q,
+                  conversations: q.conversations.map(c =>
+                    c.id === conversationId
+                      ? {
+                          ...c,
+                          dialogue: c.dialogue.map(l =>
+                            l.id === lineId ? { ...l, ...updates } : l
+                          ),
+                        }
+                      : c
+                  ),
+                }
+              : q
+          ),
+        },
       },
     }));
   };
@@ -323,20 +416,23 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const deleteDialogueLine = (questId: string, conversationId: string, lineId: string) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? {
-                ...q,
-                conversations: q.conversations.map(c =>
-                  c.id === conversationId
-                    ? { ...c, dialogue: c.dialogue.filter(l => l.id !== lineId) }
-                    : c
-                ),
-              }
-            : q
-        ),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? {
+                  ...q,
+                  conversations: q.conversations.map(c =>
+                    c.id === conversationId
+                      ? { ...c, dialogue: c.dialogue.filter(l => l.id !== lineId) }
+                      : c
+                  ),
+                }
+              : q
+          ),
+        },
       },
     }));
   };
@@ -344,22 +440,25 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const reorderDialogue = (questId: string, conversationId: string, fromIndex: number, toIndex: number) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? {
-                ...q,
-                conversations: q.conversations.map(c => {
-                  if (c.id !== conversationId) return c;
-                  const newDialogue = [...c.dialogue];
-                  const [moved] = newDialogue.splice(fromIndex, 1);
-                  newDialogue.splice(toIndex, 0, moved);
-                  return { ...c, dialogue: newDialogue };
-                }),
-              }
-            : q
-        ),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? {
+                  ...q,
+                  conversations: q.conversations.map(c => {
+                    if (c.id !== conversationId) return c;
+                    const newDialogue = [...c.dialogue];
+                    const [moved] = newDialogue.splice(fromIndex, 1);
+                    newDialogue.splice(toIndex, 0, moved);
+                    return { ...c, dialogue: newDialogue };
+                  }),
+                }
+              : q
+          ),
+        },
       },
     }));
   };
@@ -367,30 +466,33 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const addAnswer = (questId: string, conversationId: string, lineId: string, answer: Omit<Answer, 'id'>) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? {
-                ...q,
-                conversations: q.conversations.map(c =>
-                  c.id === conversationId
-                    ? {
-                        ...c,
-                        dialogue: c.dialogue.map(l =>
-                          l.id === lineId
-                            ? {
-                                ...l,
-                                answers: [...(l.answers || []), { ...answer, id: crypto.randomUUID() }],
-                              }
-                            : l
-                        ),
-                      }
-                    : c
-                ),
-              }
-            : q
-        ),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? {
+                  ...q,
+                  conversations: q.conversations.map(c =>
+                    c.id === conversationId
+                      ? {
+                          ...c,
+                          dialogue: c.dialogue.map(l =>
+                            l.id === lineId
+                              ? {
+                                  ...l,
+                                  answers: [...(l.answers || []), { ...answer, id: crypto.randomUUID() }],
+                                }
+                              : l
+                          ),
+                        }
+                      : c
+                  ),
+                }
+              : q
+          ),
+        },
       },
     }));
   };
@@ -398,32 +500,35 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const updateAnswer = (questId: string, conversationId: string, lineId: string, answerId: string, updates: Partial<Answer>) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? {
-                ...q,
-                conversations: q.conversations.map(c =>
-                  c.id === conversationId
-                    ? {
-                        ...c,
-                        dialogue: c.dialogue.map(l =>
-                          l.id === lineId
-                            ? {
-                                ...l,
-                                answers: l.answers?.map(a =>
-                                  a.id === answerId ? { ...a, ...updates } : a
-                                ),
-                              }
-                            : l
-                        ),
-                      }
-                    : c
-                ),
-              }
-            : q
-        ),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? {
+                  ...q,
+                  conversations: q.conversations.map(c =>
+                    c.id === conversationId
+                      ? {
+                          ...c,
+                          dialogue: c.dialogue.map(l =>
+                            l.id === lineId
+                              ? {
+                                  ...l,
+                                  answers: l.answers?.map(a =>
+                                    a.id === answerId ? { ...a, ...updates } : a
+                                  ),
+                                }
+                              : l
+                          ),
+                        }
+                      : c
+                  ),
+                }
+              : q
+          ),
+        },
       },
     }));
   };
@@ -431,30 +536,33 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const deleteAnswer = (questId: string, conversationId: string, lineId: string, answerId: string) => {
     setData(prev => ({
       ...prev,
-      [prev.version]: {
-        ...prev[prev.version],
-        quests: prev[prev.version].quests.map(q =>
-          q.id === questId
-            ? {
-                ...q,
-                conversations: q.conversations.map(c =>
-                  c.id === conversationId
-                    ? {
-                        ...c,
-                        dialogue: c.dialogue.map(l =>
-                          l.id === lineId
-                            ? {
-                                ...l,
-                                answers: l.answers?.filter(a => a.id !== answerId),
-                              }
-                            : l
-                        ),
-                      }
-                    : c
-                ),
-              }
-            : q
-        ),
+      versions: {
+        ...prev.versions,
+        [prev.currentVersion]: {
+          ...prev.versions[prev.currentVersion],
+          quests: prev.versions[prev.currentVersion].quests.map(q =>
+            q.id === questId
+              ? {
+                  ...q,
+                  conversations: q.conversations.map(c =>
+                    c.id === conversationId
+                      ? {
+                          ...c,
+                          dialogue: c.dialogue.map(l =>
+                            l.id === lineId
+                              ? {
+                                  ...l,
+                                  answers: l.answers?.filter(a => a.id !== answerId),
+                                }
+                              : l
+                          ),
+                        }
+                      : c
+                  ),
+                }
+              : q
+          ),
+        },
       },
     }));
   };
@@ -464,6 +572,8 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
       value={{
         data,
         setVersion,
+        addVersion,
+        deleteVersion,
         addCharacter,
         updateCharacter,
         deleteCharacter,

@@ -8,6 +8,11 @@ import { toast } from '@/hooks/use-toast';
 
 export const CharacterList = () => {
   const { data, addCharacter, updateCharacter, deleteCharacter } = useDialogue();
+  const currentVersionData = data.versions[data.currentVersion];
+
+  if (!currentVersionData)
+    return null;
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | undefined>();
 
@@ -32,7 +37,7 @@ export const CharacterList = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (data[data.version].characters.length === 1) {
+    if (currentVersionData.characters.length === 1) {
       toast({ title: 'Cannot delete last character', variant: 'destructive' });
       return;
     }
@@ -50,7 +55,7 @@ export const CharacterList = () => {
       </div>
 
       <div className="space-y-1">
-        {data[data.version].characters.map((character) => (
+        {currentVersionData.characters.map((character) => (
           <div
             key={character.id}
             className="group flex items-start gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-accent/50"

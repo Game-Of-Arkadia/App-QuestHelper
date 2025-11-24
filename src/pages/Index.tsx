@@ -10,8 +10,11 @@ const IndexContent = () => {
   const { data } = useDialogue();
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-version', data.version);
-  }, [data.version]);
+    const currentVersionData = data.versions[data.currentVersion];
+    if (currentVersionData) {
+      document.documentElement.style.setProperty('--version-color', currentVersionData.color);
+    }
+  }, [data.currentVersion, data.versions]);
 
   return (
     <SidebarProvider>

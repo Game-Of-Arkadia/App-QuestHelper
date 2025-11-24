@@ -9,6 +9,11 @@ import { Conversation, DialogueLine } from '@/types/dialogue';
 
 export const QuestList = () => {
   const { data, addQuest, updateQuest, deleteQuest, setActiveQuest, addConversation, addDialogueLine } = useDialogue();
+  const currentVersionData = data.versions[data.currentVersion];
+
+  if (!currentVersionData)
+    return null;
+
   const [isAdding, setIsAdding] = useState(false);
   const [newQuestTitle, setNewQuestTitle] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -145,11 +150,11 @@ export const QuestList = () => {
 
       <ScrollArea className="flex-1">
         <div className="space-y-1 px-2">
-          {data[data.version].quests.map((quest) => (
+          {currentVersionData.quests.map((quest) => (
             <div
               key={quest.id}
               className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
-                data[data.version].activeQuestId === quest.id
+                currentVersionData.activeQuestId === quest.id
                   ? 'bg-accent text-accent-foreground'
                   : 'hover:bg-muted'
               }`}
