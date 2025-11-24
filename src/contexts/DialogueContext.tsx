@@ -38,30 +38,28 @@ const getInitialData = (): AppData => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     const parsedData = JSON.parse(stored);
-    
+
     // Migrate from old version structure to new dynamic structure
     if (parsedData.version && parsedData.v1) {
       return {
-        currentVersion: 'v1',
+        currentVersion: 'Default',
         versions: {
-          v1: { ...parsedData.v1, name: 'v1', color: VERSION_COLORS[0] },
-          v2: { ...parsedData.v2, name: 'v2', color: VERSION_COLORS[1] },
-          v3: { ...parsedData.v3, name: 'v3', color: VERSION_COLORS[2] },
+          v1: { ...parsedData.v1, name: 'Default', color: VERSION_COLORS[0] },
         },
       };
     }
-    
+
     // Migrate from very old structure (no versions)
     if (parsedData.characters && !parsedData.currentVersion) {
       return {
-        currentVersion: 'v1',
+        currentVersion: 'Default',
         versions: {
           v1: {
             characters: parsedData.characters,
             quests: parsedData.quests,
             activeQuestId: parsedData.activeQuestId,
             activeConversationId: parsedData.activeConversationId,
-            name: 'v1',
+            name: 'Default',
             color: VERSION_COLORS[0],
           },
         },
@@ -70,31 +68,29 @@ const getInitialData = (): AppData => {
     
     return parsedData;
   }
-  
+
   return {
-    currentVersion: 'v1',
+    currentVersion: 'Default',
     versions: {
-      v1: createDefaultVersionData('v1', VERSION_COLORS[0]),
+      v1: createDefaultVersionData('Default', VERSION_COLORS[0]),
     },
   };
 };
 
-const createDefaultVersionData = (name: string, color: string): VersionData => {
-  
-  // Default data
-  const ambiantChar: Character = {
-    id: generateUUID(),
-    name: 'ambiant',
-    yamlConfig: "Settings:\n typing-speed: 1 # Ticks(Second/20)\n range: 3\n effect: Freeze # Slowness / Freeze\n answer-numbers: false\n prevent-exit: false\n character-name: false\n character-image: false\n background-fog: true\nSounds:\n typing: luxdialogues:luxdialogues.sounds.typing\n selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n name: 20\n dialogue-background: 0\n dialogue-line: 10\n answer-background: 90\n answer-line: 8\n arrow: -7\n character: -16\nCharacter:\n name: Ambiant"
-    //yamlConfig: "Settings:\n  typing-speed: 1 # Ticks(Second/20)\n  range: 3\n  effect: Freeze # Slowness / Freeze\n  answer-numbers: false\n  prevent-exit: false\n  character-name: false\n  character-image: false\n  background-fog: true\nSounds:\n  typing: luxdialogues:luxdialogues.sounds.typing\n  selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n  name: 20\n  dialogue-background: 0\n  dialogue-line: 10\n  answer-background: 90\n  answer-line: 8\n  arrow: -7\n  character: -16\nCharacter:\n  name: Ambiant\nImages:\n  character: tavernier-avatar\n  arrow: hand\n  dialogue-background: dialogue-background\n  answer-background: answer-background\n  name-start: name-start\n  name-mid: name-mid\n  name-end: name-end\n  fog: fog\nColors:\n  name: '#4f4a3e'\n  name-background: '#f8ffe0'\n  dialogue: '#4f4a3e'\n  dialogue-background: '#f8ffe0'\n  answer: '#4f4a3e'\n  answer-background: '#f8ffe0'\n  arrow: '#cdff29'\n  selected: '#4f4a3e'\n  fog: '#000000'\n",
-  };
+// Default data
+const ambiantChar: Character = {
+  id: generateUUID(),
+  name: 'ambiant',
+  yamlConfig: "Settings:\n typing-speed: 1 # Ticks(Second/20)\n range: 3\n effect: Freeze # Slowness / Freeze\n answer-numbers: false\n prevent-exit: false\n character-name: false\n character-image: false\n background-fog: true\nSounds:\n typing: luxdialogues:luxdialogues.sounds.typing\n selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n name: 20\n dialogue-background: 0\n dialogue-line: 10\n answer-background: 90\n answer-line: 8\n arrow: -7\n character: -16\nCharacter:\n name: Ambiant"
+  //yamlConfig: "Settings:\n  typing-speed: 1 # Ticks(Second/20)\n  range: 3\n  effect: Freeze # Slowness / Freeze\n  answer-numbers: false\n  prevent-exit: false\n  character-name: false\n  character-image: false\n  background-fog: true\nSounds:\n  typing: luxdialogues:luxdialogues.sounds.typing\n  selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n  name: 20\n  dialogue-background: 0\n  dialogue-line: 10\n  answer-background: 90\n  answer-line: 8\n  arrow: -7\n  character: -16\nCharacter:\n  name: Ambiant\nImages:\n  character: tavernier-avatar\n  arrow: hand\n  dialogue-background: dialogue-background\n  answer-background: answer-background\n  name-start: name-start\n  name-mid: name-mid\n  name-end: name-end\n  fog: fog\nColors:\n  name: '#4f4a3e'\n  name-background: '#f8ffe0'\n  dialogue: '#4f4a3e'\n  dialogue-background: '#f8ffe0'\n  answer: '#4f4a3e'\n  answer-background: '#f8ffe0'\n  arrow: '#cdff29'\n  selected: '#4f4a3e'\n  fog: '#000000'\n",
+};
 
-  const defaultChar: Character = {
-    id: generateUUID(),
-    name: "default",
-    yamlConfig: "Settings:\n typing-speed: 1 # Ticks(Second/20)\n range: 3\n effect: Freeze # Slowness / Freeze\n answer-numbers: false\n prevent-exit: false\n character-name: true\n character-image: false\n background-fog: true\nSounds:\n typing: luxdialogues:luxdialogues.sounds.typing\n selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n name: 20\n dialogue-background: 0\n dialogue-line: 10\n answer-background: 90\n answer-line: 8\n arrow: -7\n character: -16\nCharacter:\n name: Default"
-    //yamlConfig: "Settings:\n  typing-speed: 1 # Ticks(Second/20)\n  range: 3\n  effect: Freeze # Slowness / Freeze\n  answer-numbers: false\n  prevent-exit: false\n  character-name: true\n  character-image: false\n  background-fog: true\nSounds:\n  typing: luxdialogues:luxdialogues.sounds.typing\n  selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n  name: 20\n  dialogue-background: 0\n  dialogue-line: 10\n  answer-background: 90\n  answer-line: 8\n  arrow: -7\n  character: -16\nCharacter:\n  name:  Default\nImages:\n  character: tavernier-avatar\n  arrow: hand\n  dialogue-background: dialogue-background\n  answer-background: answer-background-large\n  name-start: name-start\n  name-mid: name-mid\n  name-end: name-end\n  fog: fog\nColors:\n  name: '#4f4a3e'\n  name-background: '#f8ffe0'\n  dialogue: '#4f4a3e'\n  dialogue-background: '#f8ffe0'\n  answer: '#4f4a3e'\n  answer-background: '#f8ffe0'\n  arrow: '#cdff29'\n  selected: '#4f4a3e'\n  fog: '#000000'\n",
-  };
+const defaultChar: Character = {
+  id: generateUUID(),
+  name: "default",
+  yamlConfig: "Settings:\n typing-speed: 1 # Ticks(Second/20)\n range: 3\n effect: Freeze # Slowness / Freeze\n answer-numbers: false\n prevent-exit: false\n character-name: true\n character-image: false\n background-fog: true\nSounds:\n typing: luxdialogues:luxdialogues.sounds.typing\n selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n name: 20\n dialogue-background: 0\n dialogue-line: 10\n answer-background: 90\n answer-line: 8\n arrow: -7\n character: -16\nCharacter:\n name: Default"
+  //yamlConfig: "Settings:\n  typing-speed: 1 # Ticks(Second/20)\n  range: 3\n  effect: Freeze # Slowness / Freeze\n  answer-numbers: false\n  prevent-exit: false\n  character-name: true\n  character-image: false\n  background-fog: true\nSounds:\n  typing: luxdialogues:luxdialogues.sounds.typing\n  selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n  name: 20\n  dialogue-background: 0\n  dialogue-line: 10\n  answer-background: 90\n  answer-line: 8\n  arrow: -7\n  character: -16\nCharacter:\n  name:  Default\nImages:\n  character: tavernier-avatar\n  arrow: hand\n  dialogue-background: dialogue-background\n  answer-background: answer-background-large\n  name-start: name-start\n  name-mid: name-mid\n  name-end: name-end\n  fog: fog\nColors:\n  name: '#4f4a3e'\n  name-background: '#f8ffe0'\n  dialogue: '#4f4a3e'\n  dialogue-background: '#f8ffe0'\n  answer: '#4f4a3e'\n  answer-background: '#f8ffe0'\n  arrow: '#cdff29'\n  selected: '#4f4a3e'\n  fog: '#000000'\n",
+};
 
   const defaultConversation: Conversation = {
     id: crypto.randomUUID(),
@@ -108,6 +104,8 @@ const createDefaultVersionData = (name: string, color: string): VersionData => {
     conversations: [defaultConversation],
   };
 
+const createDefaultVersionData = (name: string, color: string): VersionData => {
+
   return {
     characters: [ambiantChar, defaultChar],
     quests: [defaultQuest],
@@ -120,9 +118,9 @@ const createDefaultVersionData = (name: string, color: string): VersionData => {
 
 const createEmptyVersionData = (name: string, color: string): VersionData => {
   return {
-    characters: [],
-    quests: [],
-    activeQuestId: null,
+    characters: [ambiantChar, defaultChar],
+    quests: [defaultQuest],
+    activeQuestId: defaultQuest.id,
     activeConversationId: null,
     name,
     color,
