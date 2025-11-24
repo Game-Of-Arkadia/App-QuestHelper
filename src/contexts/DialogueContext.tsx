@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AppData, Character, Conversation, DialogueLine, Answer, Quest, Version, VersionData } from '@/types/dialogue';
+import { generateUUID } from '@/lib/utils';
 
 interface DialogueContextType {
   data: AppData;
@@ -27,14 +28,6 @@ interface DialogueContextType {
 const DialogueContext = createContext<DialogueContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'Cookie_thats_stealing_all_your_data'; // W name for the storage key ?
-
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
 
 const getInitialData = (): AppData => {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -89,13 +82,13 @@ const createDefaultVersionData = (defaultName: string): VersionData => {
     title: 'Introduction',
     dialogue: [],
   };
-  
+
   const defaultQuest: Quest = {
     id: crypto.randomUUID(),
     title: defaultName,
     conversations: [defaultConversation],
   };
-  
+
   return {
     characters: [defaultChar, ambiantChar],
     quests: [defaultQuest],
