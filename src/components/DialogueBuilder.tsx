@@ -233,31 +233,60 @@ export const DialogueBuilder = () => {
         )}
 
         <div className="flex flex-wrap gap-2">
-          {activeQuest.conversations.map((conv) => (
-            <div
-              key={conv.id}
-              className={`group flex items-center gap-2 px-3 py-1.5 rounded-md border transition-colors ${
-                currentVersionData.activeConversationId === conv.id
-                  ? 'bg-accent text-accent-foreground border-accent'
-                  : 'bg-card hover:bg-muted border-border cursor-pointer'
-              }`}
-              onClick={() => setActiveConversation(conv.id)}
-            >
-              <MessageSquare className="h-3.5 w-3.5" />
-              <span className="text-sm font-medium">{conv.title}</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteConversation(conv.id, conv.title);
+          {activeQuest.conversations.map((conv) => {
+            const isActive = currentVersionData.activeConversationId === conv.id;
+            const hasVersionColor = !!currentVersionData?.color;
+            const activeStyle = hasVersionColor
+              ? {
+                  backgroundColor: currentVersionData.color,
+                  borderColor: currentVersionData.color,
+                  color: '#ffffff',
+                }
+              : undefined;
+
+            return (
+              <div
+                key={conv.id}
+                className={`group flex items-center gap-2 px-3 py-1.5 rounded-md border transition-colors ${
+                  isActive
+                    ? 'border'
+                    : 'bg-card hover:bg-muted border-border cursor-pointer'
+                }`}
+                onClick={() => setActiveConversation(conv.id)}
+                style={isActive ? activeStyle : undefined}
+                onMouseEnter={(e) => {
+                  if (!isActive && hasVersionColor) {
+                    const el = e.currentTarget;
+                    el.style.backgroundColor = currentVersionData.color || '';
+                    el.style.borderColor = currentVersionData.color || '';
+                    if (currentVersionData.color) el.style.color = '#ffffff';
+                  }
                 }}
-                className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:text-destructive"
+                onMouseLeave={(e) => {
+                  if (!isActive && hasVersionColor) {
+                    const el = e.currentTarget;
+                    el.style.backgroundColor = '';
+                    el.style.borderColor = '';
+                    if (currentVersionData.color) el.style.color = '';
+                  }
+                }}
               >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
+                <MessageSquare className="h-3.5 w-3.5" />
+                <span className="text-sm font-medium">{conv.title}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteConversation(conv.id, conv.title);
+                  }}
+                  className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            );
+          })}
           {activeQuest.conversations.length === 0 && (
             <p className="text-sm text-muted-foreground italic">No conversations created. Click "Create" to create one.</p>
           )}

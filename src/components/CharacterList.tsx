@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 export const CharacterList = () => {
   const { data, addCharacter, updateCharacter, deleteCharacter } = useDialogue();
   const currentVersionData = data.versions[data.currentVersion];
+  const versionColor = currentVersionData?.color;
 
   if (!currentVersionData)
     return null;
@@ -58,7 +59,16 @@ export const CharacterList = () => {
         {currentVersionData.characters.map((character) => (
           <div
             key={character.id}
-            className="group flex items-start gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-accent/50"
+            className="group flex items-start gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-opacity-50"
+            style={{ '--hover-color': versionColor } as React.CSSProperties}
+            onMouseEnter={(e) => {
+              if (versionColor) {
+                e.currentTarget.style.backgroundColor = versionColor + '20';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '';
+            }}
           >
             <UserCircle className="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0" />
             <div className="flex-1 min-w-0">
