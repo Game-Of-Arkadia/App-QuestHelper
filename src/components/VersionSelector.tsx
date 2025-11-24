@@ -66,7 +66,7 @@ export const VersionSelector = () => {
                 id="version-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., my_version"
+                placeholder="ex: Riddermark"
                 onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
               />
             </div>
