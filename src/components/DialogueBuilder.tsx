@@ -31,14 +31,24 @@ export const DialogueBuilder = () => {
     updateQuest,
   } = useDialogue();
 
+  const currentVersionData = data.versions[data.currentVersion];
+  
+  if (!currentVersionData) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-muted-foreground">No version selected</p>
+      </div>
+    );
+  }
+
   const [isAddingConversation, setIsAddingConversation] = useState(false);
   const [newConversationTitle, setNewConversationTitle] = useState('');
 
   const maxCharSize = 32
 
-  const activeQuest = data.quests.find((q) => q.id === data.activeQuestId);
+  const activeQuest = currentVersionData.quests.find((q) => q.id === currentVersionData.activeQuestId);
   const activeConversation = activeQuest?.conversations.find(
-    (c) => c.id === data.activeConversationId
+    (c) => c.id === currentVersionData.activeConversationId
   );
 
   if (!activeQuest) {
@@ -72,12 +82,12 @@ export const DialogueBuilder = () => {
       toast({ title: 'You must have selected a conversation before', variant: 'destructive' });
       return;
     }
-    if (data.characters.length === 0) {
+   if (currentVersionData.characters.length === 0) {
       toast({ title: 'You must have at least one character.', variant: 'destructive' });
       return;
     }
     addDialogueLine(activeQuest.id, activeConversation.id, {
-      characterId: data.characters[0].id,
+      characterId: currentVersionData.characters[0].id,
       text: '',
       linkedToNext: true,
     });
@@ -115,7 +125,7 @@ export const DialogueBuilder = () => {
       const convFolder = questFolder.folder(sanitizedConvTitle);
 
       conv.dialogue.forEach((line, index) => {
-        const character = data.characters.find(c => c.id === line.characterId);
+        const character = currentVersionData.characters.find((c) => c.id === line.characterId);
         let  characterYaml = character?.yamlConfig || '';
 
         if (line.displayName) {
@@ -227,7 +237,7 @@ export const DialogueBuilder = () => {
             <div
               key={conv.id}
               className={`group flex items-center gap-2 px-3 py-1.5 rounded-md border transition-colors ${
-                data.activeConversationId === conv.id
+                currentVersionData.activeConversationId === conv.id
                   ? 'bg-accent text-accent-foreground border-accent'
                   : 'bg-card hover:bg-muted border-border cursor-pointer'
               }`}
@@ -282,7 +292,7 @@ export const DialogueBuilder = () => {
               </div>
             ) : (
               activeConversation.dialogue.map((line, index) => {
-                const character = data.characters.find((c) => c.id === line.characterId);
+                const character = currentVersionData.characters.find((c) => c.id === line.characterId);
                 return (
                   <div
                     key={line.id}
@@ -321,7 +331,7 @@ export const DialogueBuilder = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {data.characters.map((char) => (
+                            {currentVersionData.characters.map((char) => (
                               <SelectItem key={char.id} value={char.id}>
                                 {char.name}
                               </SelectItem>
