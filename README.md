@@ -58,16 +58,19 @@ This will start the QuestHelper server, which you can access at [http://localhos
 You can customize settings using environment variables:
 
 | Variable | Purpose | Default Value |
-|----------|---------|---------|
+|----------|---------|---------------|
 | `QSTH_HOST` | Set the host address | `::` |
 | `QSTH_PORT` | Set the port number | `8082` |
+| `QSTH_ALLOWED_HOST` | Controls allowed hosts (`true` to accept any host) | `true` |
+| `QSTH_BASE_URL` | Subfolder name when hosting under a subpath (ex: use `app` for site.com/app). Leave empty for root. | `''` |
 
-**Example:**
+Example:
 ```bash
-QUESTHELPER_HOST='0.0.0.0' QUESTHELPER_PORT=3000 npm run app
+# bind to all interfaces on port 3000, allow any host, and serve under /questhelper
+QSTH_HOST='0.0.0.0' QSTH_PORT=3000 QSTH_ALLOWED_HOST='true' QSTH_BASE_URL='questhelper' npm run app
 ```
 
-Since the app only uses the root `/` path, you can safely use a custom domain or reverse proxy without conflicts.
+Since the app normally uses the root (`/`) path, you can safely use a custom domain or reverse proxy without conflicts. If you set `QSTH_BASE_URL`, ensure your reverse proxy forwards the subpath (and rewrites requests) to the app accordingly.
 
 
 ## 💬 Support

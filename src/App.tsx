@@ -11,7 +11,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.QSTH_BASE_URL || ""}>
         <Routes>
           <Route path="/" element={<Index />} />
           {/* custom routes here "*" for all */}
