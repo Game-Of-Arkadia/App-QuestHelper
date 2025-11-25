@@ -2,13 +2,14 @@ import { useDialogue } from '@/contexts/DialogueContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Trash2, FolderOpen, Upload } from 'lucide-react';
+import { Plus, Trash2, FolderOpen, Upload, Copy } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { Conversation, DialogueLine } from '@/types/dialogue';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, } from '@/components/ui/dialog';
 
 export const QuestList = () => {
-  const { data, addQuest, updateQuest, deleteQuest, setActiveQuest, addConversation, addDialogueLine } = useDialogue();
+  const { data, addQuest, updateQuest, deleteQuest, setActiveQuest, addConversation, addDialogueLine, copyQuestFromVersion } = useDialogue();
   const currentVersionData = data.versions[data.currentVersion];
 
   if (!currentVersionData)
@@ -16,6 +17,7 @@ export const QuestList = () => {
 
   const [isAdding, setIsAdding] = useState(false);
   const [newQuestTitle, setNewQuestTitle] = useState('');
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hoveredQuestId, setHoveredQuestId] = useState<string | null>(null);
 
@@ -34,6 +36,16 @@ export const QuestList = () => {
       toast({ title: 'Quest deleted' });
     }
   };
+
+  const handleCopyQuest = (sourceVersionId: string, questId: string) => {
+    copyQuestFromVersion(sourceVersionId, questId);
+    setIsCopyDialogOpen(false);
+    toast({ title: 'Quest copied' });
+  };
+
+  const otherVersions = Object.entries(data.versions).filter(
+    ([versionId]) => versionId !== data.currentVersion
+  );
 
   const handleImportFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -113,6 +125,65 @@ export const QuestList = () => {
           >
             <Upload className="h-4 w-4" />
           </Button>
+          <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7 p-0"
+                title="Copy quest from another version"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Copy Quest from Another Version</DialogTitle>
+                <DialogDescription>
+                  Select a quest from another version to copy to the current version.
+                </DialogDescription>
+              </DialogHeader>
+              <ScrollArea className="max-h-[400px]">
+                <div className="space-y-4">
+                  {otherVersions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No other versions available
+                    </p>
+                  ) : (
+                    otherVersions.map(([versionId, versionData]) => (
+                      <div key={versionId} className="space-y-2">
+                        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: versionData.color }}
+                          />
+                          {versionData.name}
+                        </h4>
+                        {versionData.quests.length === 0 ? (
+                          <p className="text-xs text-muted-foreground pl-5">No quests</p>
+                        ) : (
+                          <div className="space-y-1 pl-5">
+                            {versionData.quests.map((quest) => (
+                              <Button
+                                key={quest.id}
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-start text-sm"
+                                onClick={() => handleCopyQuest(versionId, quest.id)}
+                              >
+                                <FolderOpen className="h-3 w-3 mr-2" />
+                                {quest.title}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
           <Button
             size="sm"
             variant="ghost"

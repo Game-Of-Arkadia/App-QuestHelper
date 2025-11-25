@@ -13,6 +13,7 @@ interface DialogueContextType {
   addQuest: (title: string) => void;
   updateQuest: (id: string, updates: Partial<Quest>) => void;
   deleteQuest: (id: string) => void;
+  copyQuestFromVersion: (sourceVersionId: string, questId: string) => void;
   setActiveQuest: (id: string) => void;
   addConversation: (questId: string, title: string) => void;
   updateConversation: (questId: string, conversationId: string, updates: Partial<Conversation>) => void;
@@ -257,6 +258,61 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
             quests: currentVer.quests.filter(q => q.id !== id),
             activeQuestId: newActiveQuestId,
             activeConversationId: newActiveConversationId,
+          },
+        },
+      };
+    });
+  };
+
+  const copyQuestFromVersion = (sourceVersionId: string, questId: string) => {
+    setData(prev => {
+      const sourceVersion = prev.versions[sourceVersionId];
+      const currentVersionData = prev.versions[prev.currentVersion];
+      
+      if (!sourceVersion || !currentVersionData) return prev;
+
+      const questToCopy = sourceVersion.quests.find((q) => q.id === questId);
+      if (!questToCopy) return prev;
+
+      // Create a deep copy with new IDs
+      const newQuestId = crypto.randomUUID();
+      const conversationIdMap = new Map<string, string>();
+      
+      const copiedConversations = questToCopy.conversations.map((conv) => {
+        const newConvId = crypto.randomUUID();
+        conversationIdMap.set(conv.id, newConvId);
+        
+        return {
+          ...conv,
+          id: newConvId,
+          dialogue: conv.dialogue.map((line) => ({
+            ...line,
+            id: crypto.randomUUID(),
+            answers: line.answers?.map((answer) => ({
+              ...answer,
+              id: crypto.randomUUID(),
+              linkedConversationId: answer.linkedConversationId
+                ? conversationIdMap.get(answer.linkedConversationId) || answer.linkedConversationId
+                : undefined,
+            })),
+          })),
+        };
+      });
+
+      const copiedQuest: Quest = {
+        id: newQuestId,
+        title: `${questToCopy.title} (copy)`,
+        conversations: copiedConversations,
+      };
+
+      return {
+        ...prev,
+        versions: {
+          ...prev.versions,
+          [prev.currentVersion]: {
+            ...currentVersionData,
+            quests: [...currentVersionData.quests, copiedQuest],
+            activeQuestId: newQuestId,
           },
         },
       };
@@ -578,6 +634,7 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
         addQuest,
         updateQuest,
         deleteQuest,
+        copyQuestFromVersion,
         setActiveQuest,
         addConversation,
         updateConversation,
