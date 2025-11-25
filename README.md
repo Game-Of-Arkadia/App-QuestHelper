@@ -61,11 +61,10 @@ You can customize settings using environment variables:
 |----------|---------|---------|
 | `QSTH_HOST` | Set the host address | `::` |
 | `QSTH_PORT` | Set the port number | `8082` |
-| `QSTH_DEFAULT_VERSION` | Set the default version of the App | `v1` |
 
 **Example:**
 ```bash
-QUESTHELPER_HOST='0.0.0.0' QUESTHELPER_PORT=3000 QSTH_DEFAULT_VERSION='v3' npm run app
+QUESTHELPER_HOST='0.0.0.0' QUESTHELPER_PORT=3000 npm run app
 ```
 
 Since the app only uses the root `/` path, you can safely use a custom domain or reverse proxy without conflicts.
