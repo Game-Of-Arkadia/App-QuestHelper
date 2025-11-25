@@ -31,9 +31,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: env.QUESTHELPER_HOST ?? process.env.QUESTHELPER_HOST ?? '::',
       port: getPort(),
-      strictPort: true,
-      middlewareMode: false,
-      cors: getAllowedHosts(),
+      allowedHosts: getAllowedHosts(),
     },
     envPrefix: 'QSTH_',
   };
