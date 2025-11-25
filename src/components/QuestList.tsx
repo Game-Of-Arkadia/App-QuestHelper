@@ -119,6 +119,23 @@ export const QuestList = () => {
           <Button
             size="sm"
             variant="ghost"
+            onClick={() => {
+              const activeQuest = currentVersionData.quests.find(
+                q => q.id === currentVersionData.activeQuestId
+              );
+              if (activeQuest) {
+                handleDelete(activeQuest.id, activeQuest.title);
+              }
+            }}
+            className="h-7 w-7 p-0"
+            title="Delete active quest"
+            disabled={!currentVersionData.activeQuestId}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => fileInputRef.current?.click()}
             className="h-7 w-7 p-0"
             title="Import from folder"
