@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Trash2,  ChevronUp, ChevronDown, Download, MessageCircleQuestion, MessageSquare, FolderOpen } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DialogueLine } from '@/types/dialogue';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -94,6 +94,14 @@ export const DialogueBuilder = () => {
       text: '',
       linkedToNext: true,
     });
+    // Set a timeout so react have the time to load the item that have been created
+    setTimeout(() => {
+      const textareas = document.querySelectorAll('textarea');
+      const lastTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
+      if (lastTextarea) {
+        lastTextarea.focus();
+      }
+    }, 50);
   };
 
   const handleUpdateLine = (lineId: string, updates: Partial<DialogueLine>) => {
@@ -191,6 +199,28 @@ export const DialogueBuilder = () => {
       toast({ title: 'Quest exported as ZIP' });
     });
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl + Enter -> Add new line
+      if (e.ctrlKey && e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleAddLine();
+        toast({ title: 'Added Line', description: 'Shortcut: Ctrl + Enter' });
+        return;
+      }
+
+      // Ctrl + Shift + Enter -> Create new conversation
+      if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+        e.preventDefault();
+        setIsAddingConversation(true);
+        toast({ title: 'Created conversation', description: 'Shortcut: Ctrl + Shift + Enter' });
+        return;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeQuest, activeConversation, currentVersionData.characters]);
 
   return (
     <div className="flex flex-col h-full">
