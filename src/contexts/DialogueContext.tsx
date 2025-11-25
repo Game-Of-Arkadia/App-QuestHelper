@@ -6,6 +6,7 @@ interface DialogueContextType {
   data: AppData;
   setVersion: (versionId: string) => void;
   addVersion: (name: string, color: string) => void;
+  updateVersion: (versionId: string, updates: { name?: string; color?: string }) => void;
   deleteVersion: (versionId: string) => void;
   addCharacter: (character: Omit<Character, 'id'>) => void;
   updateCharacter: (id: string, character: Partial<Character>) => void;
@@ -147,6 +148,19 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
       versions: {
         ...prev.versions,
         [versionId]: createEmptyVersionData(name, color),
+      },
+    }));
+  };
+
+  const updateVersion = (versionId: string, updates: { name?: string; color?: string }) => {
+    setData(prev => ({
+      ...prev,
+      versions: {
+        ...prev.versions,
+        [versionId]: {
+          ...prev.versions[versionId],
+          ...updates,
+        },
       },
     }));
   };
@@ -627,6 +641,7 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
         data,
         setVersion,
         addVersion,
+        updateVersion,
         deleteVersion,
         addCharacter,
         updateCharacter,

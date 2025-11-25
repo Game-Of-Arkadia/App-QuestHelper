@@ -1,6 +1,6 @@
 import { useDialogue } from '@/contexts/DialogueContext';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,17 +9,37 @@ import { useState } from 'react';
 const VERSION_COLORS = ['#f97316', '#22c55e', '#ec4899', '#3b82f6', '#a855f7', '#eab308', '#14b8a6', '#ef4444'];
 
 export const VersionSelector = () => {
-  const { data, setVersion, addVersion } = useDialogue();
-  const [isOpen, setIsOpen] = useState(false);
+  const { data, setVersion, addVersion, updateVersion } = useDialogue();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState(VERSION_COLORS[0]);
+  const [editName, setEditName] = useState('');
+  const [editColor, setEditColor] = useState('');
 
   const handleCreate = () => {
     if (name.trim()) {
       addVersion(name.trim(), selectedColor);
       setName('');
       setSelectedColor(VERSION_COLORS[0]);
-      setIsOpen(false);
+      setIsCreateOpen(false);
+    }
+  };
+
+  const handleOpenEdit = () => {
+    const currentVersionData = data.versions[data.currentVersion];
+    setEditName(currentVersionData.name);
+    setEditColor(currentVersionData.color);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdate = () => {
+    if (editName.trim()) {
+      updateVersion(data.currentVersion, {
+        name: editName.trim(),
+        color: editColor,
+      });
+      setIsEditOpen(false);
     }
   };
 
@@ -49,7 +69,50 @@ export const VersionSelector = () => {
         ))}
       </div>
       
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={handleOpenEdit}>
+            <Settings className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Version</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-version-name">Version Name</Label>
+              <Input
+                id="edit-version-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="e.g., my_version"
+                onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {VERSION_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setEditColor(color)}
+                    className={`w-10 h-10 rounded-md transition-all ${
+                      editColor === color ? 'ring-2 ring-offset-2 ring-foreground scale-110' : ''
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+            <Button onClick={handleUpdate} className="w-full" disabled={!editName.trim()}>
+              Update !
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm" className="h-9 w-9 p-0">
             <Plus className="h-4 w-4" />

@@ -48,10 +48,10 @@ const IndexContent = () => {
       const h = parseInt(hslParts[0]);
       const s = parseInt(hslParts[1]);
       const l = parseInt(hslParts[2]);
-      
+
       // Light mode version
       document.documentElement.style.setProperty('--dynamic-accent', hslColor);
-      
+
       // Dark mode version
       const darkL = Math.min(l + 10, 65); // Slightly lighter for dark mode
       document.documentElement.style.setProperty('--dynamic-accent-dark', `${h} ${s}% ${darkL}%`);
