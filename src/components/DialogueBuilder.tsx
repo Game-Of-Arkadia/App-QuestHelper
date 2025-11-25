@@ -86,8 +86,11 @@ export const DialogueBuilder = () => {
       toast({ title: 'You must have at least one character.', variant: 'destructive' });
       return;
     }
+
+    const lastLine = activeConversation.dialogue[activeConversation.dialogue.length - 1];
     addDialogueLine(activeQuest.id, activeConversation.id, {
-      characterId: currentVersionData.characters[0].id,
+      characterId: lastLine?.characterId || currentVersionData.characters[0].id,
+      displayName: lastLine?.displayName,
       text: '',
       linkedToNext: true,
     });
