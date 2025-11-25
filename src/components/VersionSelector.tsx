@@ -33,15 +33,23 @@ export const VersionSelector = () => {
     setIsEditOpen(true);
   };
 
-  const handleUpdate = () => {
-    if (editName.trim()) {
-      updateVersion(data.currentVersion, {
-        name: editName.trim(),
-        color: editColor,
-      });
-      setIsEditOpen(false);
-    }
+  const handleUpdate = (newColor?: string) => {
+    if (!editName.trim())
+      return;
+
+    const colorToUse = newColor ?? editColor;
+    updateVersion(data.currentVersion, {
+      name: editName.trim(),
+      color: colorToUse,
+    });
   };
+
+  const handleDialogOpenChange = (open: boolean) => {
+  if (!open) {
+    handleUpdate();
+  }
+  setIsEditOpen(open);
+};
 
   const versionEntries = Object.entries(data.versions);
 
@@ -69,7 +77,7 @@ export const VersionSelector = () => {
         ))}
       </div>
       
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      <Dialog open={isEditOpen} onOpenChange={handleDialogOpenChange}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={handleOpenEdit}>
             <Settings className="h-4 w-4" />
@@ -96,7 +104,10 @@ export const VersionSelector = () => {
                 {VERSION_COLORS.map((color) => (
                   <button
                     key={color}
-                    onClick={() => setEditColor(color)}
+                    onClick={() => {
+                      setEditColor(color);
+                      handleUpdate(color);
+                    }}
                     className={`w-10 h-10 rounded-md transition-all ${
                       editColor === color ? 'ring-2 ring-offset-2 ring-foreground scale-110' : ''
                     }`}
@@ -105,9 +116,6 @@ export const VersionSelector = () => {
                 ))}
               </div>
             </div>
-            <Button onClick={handleUpdate} className="w-full" disabled={!editName.trim()}>
-              Update !
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
