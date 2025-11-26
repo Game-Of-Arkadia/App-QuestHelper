@@ -28,6 +28,7 @@ export const VersionSelector = () => {
 
   const handleOpenEdit = () => {
     const currentVersionData = data.versions[data.currentVersion];
+
     setEditName(currentVersionData.name);
     setEditColor(currentVersionData.color);
     setIsEditOpen(true);
@@ -36,8 +37,8 @@ export const VersionSelector = () => {
   const handleUpdate = (newColor?: string) => {
     if (!editName.trim())
       return;
-
     const colorToUse = newColor ?? editColor;
+
     updateVersion(data.currentVersion, {
       name: editName.trim(),
       color: colorToUse,
@@ -57,26 +58,12 @@ export const VersionSelector = () => {
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
         {versionEntries.map(([id, versionData]) => (
-          <button
-            key={id}
-            onClick={() => setVersion(id)}
-            className={`
-              px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-300
-              ${data.currentVersion === id
-                ? 'bg-accent text-accent-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }
-            `}
-            style={data.currentVersion === id ? {
-              backgroundColor: versionData.color,
-              color: 'white',
-            } : {}}
-          >
+          <button key={id} onClick={() => setVersion(id)} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-300 ${data.currentVersion === id ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted' } `} style={data.currentVersion === id ? { backgroundColor: versionData.color, color: 'white' } : {}}>
             {versionData.name}
           </button>
         ))}
       </div>
-      
+
       <Dialog open={isEditOpen} onOpenChange={handleDialogOpenChange}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={handleOpenEdit}>
@@ -85,34 +72,18 @@ export const VersionSelector = () => {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Version</DialogTitle>
+            <DialogTitle>Edit City</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-version-name">Version Name</Label>
-              <Input
-                id="edit-version-name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="e.g., my_version"
-                onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
-              />
+              <Label htmlFor="edit-version-name">City Name</Label>
+              <Input id="edit-version-name" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="e.g., my_version" onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}/>
             </div>
             <div className="space-y-2">
               <Label>Color</Label>
               <div className="flex gap-2 flex-wrap">
                 {VERSION_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => {
-                      setEditColor(color);
-                      handleUpdate(color);
-                    }}
-                    className={`w-10 h-10 rounded-md transition-all ${
-                      editColor === color ? 'ring-2 ring-offset-2 ring-foreground scale-110' : ''
-                    }`}
-                    style={{ backgroundColor: color }}
-                  />
+                  <button key={color} onClick={() => { setEditColor(color); handleUpdate(color); }} className={`w-10 h-10 rounded-md transition-all ${ editColor === color ? 'ring-2 ring-offset-2 ring-foreground scale-110' : '' }`} style={{ backgroundColor: color }} />
                 ))}
               </div>
             </div>
@@ -128,31 +99,18 @@ export const VersionSelector = () => {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Version</DialogTitle>
+            <DialogTitle>Create New City</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="version-name">Version Name</Label>
-              <Input
-                id="version-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="ex: Riddermark"
-                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-              />
+              <Label htmlFor="version-name">City Name</Label>
+              <Input id="version-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="ex: Riddermark" onKeyDown={(e) => e.key === 'Enter' && handleCreate()}/>
             </div>
             <div className="space-y-2">
               <Label>Color</Label>
               <div className="flex gap-2 flex-wrap">
                 {VERSION_COLORS.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`w-10 h-10 rounded-md transition-all ${
-                      selectedColor === color ? 'ring-2 ring-offset-2 ring-foreground scale-110' : ''
-                    }`}
-                    style={{ backgroundColor: color }}
-                  />
+                  <button key={color} onClick={() => setSelectedColor(color)} className={`w-10 h-10 rounded-md transition-all ${ selectedColor === color ? 'ring-2 ring-offset-2 ring-foreground scale-110' : '' }`} style={{ backgroundColor: color }}/>
                 ))}
               </div>
             </div>

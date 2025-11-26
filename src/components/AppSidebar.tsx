@@ -1,10 +1,4 @@
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-} from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from '@/components/ui/sidebar';
 import { CharacterList } from './CharacterList';
 import { QuestList } from './QuestList';
 import arkadiaLogo from '../assets/img/logo.png';

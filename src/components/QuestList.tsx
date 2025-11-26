@@ -54,7 +54,6 @@ export const QuestList = () => {
 
     const fullpath = files[0].webkitRelativePath;
     const folderName = fullpath.split('/')[0];
-
     const questId = crypto.randomUUID();
     addQuest(folderName);
 
@@ -69,40 +68,15 @@ export const QuestList = () => {
       <div className="flex items-center justify-between px-2">
         <h3 className="text-sm font-semibold text-foreground">Quests</h3>
         <div className="flex gap-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              const activeQuest = currentVersionData.quests.find(
-                q => q.id === currentVersionData.activeQuestId
-              );
-              if (activeQuest) {
-                handleDelete(activeQuest.id, activeQuest.title);
-              }
-            }}
-            className="h-7 w-7 p-0"
-            title="Delete active quest"
-            disabled={!currentVersionData.activeQuestId}
-          >
+          <Button size="sm" variant="ghost" onClick={() => { const activeQuest = currentVersionData.quests.find( q => q.id === currentVersionData.activeQuestId ); if (activeQuest) handleDelete(activeQuest.id, activeQuest.title); }} className="h-7 w-7 p-0" title="Delete active quest" disabled={!currentVersionData.activeQuestId}>
             <Trash2 className="h-4 w-4" />
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => fileInputRef.current?.click()}
-            className="h-7 w-7 p-0"
-            title="Import from folder"
-          >
+          <Button size="sm" variant="ghost" onClick={() => fileInputRef.current?.click()} className="h-7 w-7 p-0" title="Import from folder">
             <Upload className="h-4 w-4" />
           </Button>
           <Dialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
             <DialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0"
-                title="Copy quest from another version"
-              >
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Copy quest from another version">
                 <Copy className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -123,10 +97,7 @@ export const QuestList = () => {
                     otherVersions.map(([versionId, versionData]) => (
                       <div key={versionId} className="space-y-2">
                         <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: versionData.color }}
-                          />
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: versionData.color }}/>
                           {versionData.name}
                         </h4>
                         {versionData.quests.length === 0 ? (
@@ -134,13 +105,7 @@ export const QuestList = () => {
                         ) : (
                           <div className="space-y-1 pl-5">
                             {versionData.quests.map((quest) => (
-                              <Button
-                                key={quest.id}
-                                variant="outline"
-                                size="sm"
-                                className="w-full justify-start text-sm"
-                                onClick={() => handleCopyQuest(versionId, quest.id)}
-                              >
+                              <Button key={quest.id} variant="outline" size="sm" className="w-full justify-start text-sm" onClick={() => handleCopyQuest(versionId, quest.id)}>
                                 <FolderOpen className="h-3 w-3 mr-2" />
                                 {quest.title}
                               </Button>
@@ -154,39 +119,18 @@ export const QuestList = () => {
               </ScrollArea>
             </DialogContent>
           </Dialog>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsAdding(true)}
-            className="h-7 w-7 p-0"
-            title="Create new quest"
-          >
+          <Button size="sm" variant="ghost" onClick={() => setIsAdding(true)} className="h-7 w-7 p-0" title="Create new quest">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        // @ts-ignore: webkitdirectory is not in the types but works in browsers
-        webkitdirectory=""
-        directory=""
-        multiple
-        onChange={handleImportFolder}
-        className="hidden"
-      />
+      <input ref={fileInputRef} type="file" // @ts-ignore:
+        webkitdirectory="" directory="" multiple onChange={handleImportFolder} className="hidden"/>
 
       {isAdding && (
         <div className="flex gap-2 px-2">
-          <Input
-            value={newQuestTitle}
-            onChange={(e) => setNewQuestTitle(e.target.value)}
-            placeholder="Quest title..."
-            className="h-8 text-sm"
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            autoFocus
-          />
+          <Input value={newQuestTitle} onChange={(e) => setNewQuestTitle(e.target.value)} placeholder="Quest title..." className="h-8 text-sm" onKeyDown={(e) => e.key === 'Enter' && handleAdd()} autoFocus/>
           <Button size="sm" onClick={handleAdd} className="h-8">
             Add
           </Button>
@@ -209,29 +153,12 @@ export const QuestList = () => {
             }
 
             return (
-              <div
-                key={quest.id}
-                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
-                  isActive && !versionColor ? 'bg-accent text-accent-foreground' : ''
-                }`}
-                onClick={() => setActiveQuest(quest.id)}
-                onMouseEnter={() => setHoveredQuestId(quest.id)}
-                onMouseLeave={() => setHoveredQuestId(null)}
-                style={dynamicStyle}
-              >
+              <div key={quest.id} className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${ isActive && !versionColor ? 'bg-accent text-accent-foreground' : '' }`} onClick={() => setActiveQuest(quest.id)} onMouseEnter={() => setHoveredQuestId(quest.id)} onMouseLeave={() => setHoveredQuestId(null)} style={dynamicStyle}>
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <FolderOpen className="h-4 w-4 flex-shrink-0" />
                   <span className="text-sm font-medium truncate">{quest.title}</span>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(quest.id, quest.title);
-                  }}
-                  className="h-6 w-6 p-0 opacity-0 hover:opacity-100 hover:text-destructive"
-                >
+                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(quest.id, quest.title); }} className="h-6 w-6 p-0 opacity-0 hover:opacity-100 hover:text-destructive">
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
