@@ -49,63 +49,16 @@ export const QuestList = () => {
 
   const handleImportFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0)
+      return;
 
-    try {
-      const firstFilePath = files[0].webkitRelativePath;
-      const folderName = firstFilePath.split('/')[0];
+    const fullpath = files[0].webkitRelativePath;
+    const folderName = fullpath.split('/')[0];
 
-      const questId = crypto.randomUUID();
-      addQuest(folderName);
+    const questId = crypto.randomUUID();
+    addQuest(folderName);
 
-      const folderMap = new Map<string, File[]>();
-      Array.from(files).forEach((file) => {
-        const pathParts = file.webkitRelativePath.split('/');
-        const conversationPath = pathParts.length > 2
-          ? pathParts.slice(1, -1).join('/')
-          : 'Root';
-
-        if (!folderMap.has(conversationPath)) {
-          folderMap.set(conversationPath, []);
-        }
-        folderMap.get(conversationPath)!.push(file);
-      });
-
-      // Create conversations from folders
-      for (const [folderPath, filesInFolder] of folderMap.entries()) {
-        const conversationId = crypto.randomUUID();
-        addConversation(questId, folderPath);
-
-        // Read each file and create dialogue lines
-        for (const file of filesInFolder) {
-          const content = await file.text();
-          const fileName = file.name;
-
-          addDialogueLine(questId, conversationId, {
-            characterId: '',
-            text: content,
-            answers: [],
-          });
-        }
-      }
-
-      toast({
-        title: 'Quest imported successfully',
-        description: `${files.length} files from "${folderName}"`
-      });
-
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Import error:', error);
-      toast({
-        title: 'Import failed',
-        description: 'Could not import folder',
-        variant: 'destructive'
-      });
-    }
+    toast({title: 'Quest imported successfully', description: `${files.length} files from "${folderName}"`});
   };
 
   const versionColor = (currentVersionData as any).color as string | undefined;
