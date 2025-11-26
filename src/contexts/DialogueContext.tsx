@@ -6,7 +6,7 @@ interface DialogueContextType {
   data: AppData;
   setVersion: (versionId: string) => void;
   addVersion: (name: string, color: string) => void;
-  updateVersion: (versionId: string, updates: { name?: string; color?: string }) => void;
+  updateVersion: (versionId: string, updates: { name?: string; color?: string; folderPath?: string }) => void;
   deleteVersion: (versionId: string) => void;
   addCharacter: (character: Omit<Character, 'id'>) => void;
   updateCharacter: (id: string, character: Partial<Character>) => void;
@@ -47,7 +47,7 @@ const getInitialData = (): AppData => {
       return {
         currentVersion: 'Default',
         versions: {
-          v1: { ...parsedData.v1, name: 'Default', color: VERSION_COLORS[0] },
+          v1: { ...parsedData.v1, name: 'default', color: VERSION_COLORS[0], folderPath: parsedData.v1.folderPath || '~/.QuestHelper/default/' }
         },
       };
     }
@@ -64,11 +64,26 @@ const getInitialData = (): AppData => {
             activeConversationId: parsedData.activeConversationId,
             name: 'Default',
             color: VERSION_COLORS[0],
+            folderPath: '~/.QuestHelper/default/'
           },
         },
       };
     }
-    
+
+    if (parsedData.versions) {
+      const migratedVersions: { [key: string]: VersionData } = {};
+      Object.entries(parsedData.versions).forEach(([key, version]: [string, any]) => {
+        migratedVersions[key] = {
+          ...version,
+          folderPath: version.folderPath || `~/.QuestHelper/${version.title}/`,
+        };
+      });
+      return {
+        ...parsedData,
+        versions: migratedVersions,
+      };
+    }
+
     return parsedData;
   }
 
@@ -116,6 +131,7 @@ const createDefaultVersionData = (name: string, color: string): VersionData => {
     activeConversationId: defaultConversation.id,
     name,
     color,
+    folderPath: '~/.QuestHelper/default/'
   };
 };
 
@@ -127,6 +143,7 @@ const createEmptyVersionData = (name: string, color: string): VersionData => {
     activeConversationId: null,
     name,
     color,
+    folderPath: `~/.QuestHelper/${name}/`,
   };
 };
 
@@ -153,7 +170,7 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const updateVersion = (versionId: string, updates: { name?: string; color?: string }) => {
+  const updateVersion = (versionId: string, updates: { name?: string; color?: string; folderPath?: string }) => {
     setData(prev => ({
       ...prev,
       versions: {

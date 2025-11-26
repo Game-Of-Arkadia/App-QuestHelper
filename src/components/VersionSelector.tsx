@@ -1,22 +1,25 @@
 import { useDialogue } from '@/contexts/DialogueContext';
 import { Button } from '@/components/ui/button';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, Settings, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 const VERSION_COLORS = ['#f97316', '#22c55e', '#ec4899', '#3b82f6', '#a855f7', '#eab308', '#14b8a6', '#ef4444'];
 
 export const VersionSelector = () => {
-  const { data, setVersion, addVersion, updateVersion } = useDialogue();
+  const { data, setVersion, addVersion, updateVersion, deleteVersion } = useDialogue();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState(VERSION_COLORS[0]);
   const [selectedVersionId, setSelectedVersionId] = useState(data.currentVersion);
-  const [editVersions, setEditVersions] = useState<{[key: string]: {name: string, color: string}}>({});
+  const [editVersions, setEditVersions] = useState<{[key: string]: {name: string, color: string, folderPath: string}}>({});
+  const [deleteVersionId, setDeleteVersionId] = useState<string | null>(null);
 
   const handleCreate = () => {
     if (name.trim()) {
@@ -28,11 +31,12 @@ export const VersionSelector = () => {
   };
 
   const handleOpenEdit = () => {
-    const initialEditState: {[key: string]: {name: string, color: string}} = {};
+    const initialEditState: {[key: string]: {name: string, color: string, folderPath: string}} = {};
     Object.entries(data.versions).forEach(([id, versionData]) => {
       initialEditState[id] = {
         name: versionData.name,
         color: versionData.color,
+        folderPath: versionData.folderPath || '~/Dialogue/<questname>/',
       };
     });
     setEditVersions(initialEditState);
@@ -46,6 +50,7 @@ export const VersionSelector = () => {
       updateVersion(versionId, {
         name: editData.name.trim(),
         color: editData.color,
+        folderPath: editData.folderPath.trim(),
       });
     }
   };
@@ -54,7 +59,24 @@ export const VersionSelector = () => {
     Object.keys(editVersions).forEach(versionId => {
       handleUpdateVersion(versionId);
     });
+    toast({ title: 'City settings updated' });
     setIsEditOpen(false);
+  };
+
+  const handleDeleteVersion = () => {
+    if (deleteVersionId) {
+      const versionEntries = Object.entries(data.versions);
+      if (versionEntries.length === 1) {
+        toast({ title: 'Cannot delete the last city', variant: 'destructive' });
+        setDeleteVersionId(null);
+        return;
+      }
+
+      deleteVersion(deleteVersionId);
+      toast({ title: 'City deleted' });
+      setDeleteVersionId(null);
+      setIsEditOpen(false);
+    }
   };
 
   const versionEntries = Object.entries(data.versions);
@@ -106,9 +128,35 @@ export const VersionSelector = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20 opacity-50">
+                <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Advanced Settings</h3>
-                  <p className="text-sm text-muted-foreground">More settings coming soon...</p>
+                  <div className="space-y-2">
+                    <Label htmlFor={`edit-folder-path-${id}`}>Folder Path</Label>
+                    <Input
+                      id={`edit-folder-path-${id}`}
+                      value={editVersions[id]?.folderPath || versionData.folderPath || '~/Dialogue/<questname>/'}
+                      onChange={(e) => setEditVersions(prev => ({
+                        ...prev,
+                        [id]: { ...prev[id], folderPath: e.target.value }
+                      }))}
+                      placeholder="~/Dialogue/<questname>/"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Default path where quests files will be stored
+                    </p>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-border">
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => setDeleteVersionId(id)}
+                      className="w-full"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete City
+                    </Button>
+                  </div>
                 </div>
               </TabsContent>
             ))}
@@ -153,6 +201,22 @@ export const VersionSelector = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={deleteVersionId !== null} onOpenChange={(open) => !open && setDeleteVersionId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this city and all its quests. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteVersion} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete City
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
