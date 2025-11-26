@@ -13,7 +13,6 @@ export const CharacterList = () => {
 
   if (!currentVersionData)
     return null;
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | undefined>();
 
@@ -57,19 +56,7 @@ export const CharacterList = () => {
 
       <div className="space-y-1">
         {currentVersionData.characters.map((character) => (
-          <div
-            key={character.id}
-            className="group flex items-start gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-opacity-50"
-            style={{ '--hover-color': versionColor } as React.CSSProperties}
-            onMouseEnter={(e) => {
-              if (versionColor) {
-                e.currentTarget.style.backgroundColor = versionColor + '20';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '';
-            }}
-          >
+          <div key={character.id} className="group flex items-start gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-opacity-50" style={{ '--hover-color': versionColor } as React.CSSProperties} onMouseEnter={(e) => { if (versionColor) { e.currentTarget.style.backgroundColor = versionColor + '20'; } }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; }}>
             <UserCircle className="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="font-medium text-sm text-foreground truncate">{character.name}</div>
@@ -80,20 +67,10 @@ export const CharacterList = () => {
               )}
             </div>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleEdit(character)}
-                className="h-7 w-7 p-0"
-              >
+              <Button size="sm" variant="ghost" onClick={() => handleEdit(character)} className="h-7 w-7 p-0">
                 <Edit2 className="h-3.5 w-3.5" />
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDelete(character.id)}
-                className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-              >
+              <Button size="sm" variant="ghost" onClick={() => handleDelete(character.id)} className="h-7 w-7 p-0 text-destructive hover:text-destructive" >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -101,12 +78,7 @@ export const CharacterList = () => {
         ))}
       </div>
 
-      <CharacterDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        character={editingCharacter}
-        onSave={handleSave}
-      />
+      <CharacterDialog open={dialogOpen} onOpenChange={setDialogOpen} character={editingCharacter} onSave={handleSave}/>
     </div>
   );
 };

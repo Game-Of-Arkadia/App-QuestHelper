@@ -6,7 +6,7 @@ interface DialogueContextType {
   data: AppData;
   setVersion: (versionId: string) => void;
   addVersion: (name: string, color: string) => void;
-  updateVersion: (versionId: string, updates: { name?: string; color?: string }) => void;
+  updateVersion: (versionId: string, updates: { name?: string; color?: string; folderPath?: string }) => void;
   deleteVersion: (versionId: string) => void;
   addCharacter: (character: Omit<Character, 'id'>) => void;
   updateCharacter: (id: string, character: Partial<Character>) => void;
@@ -24,6 +24,7 @@ interface DialogueContextType {
   updateDialogueLine: (questId: string, conversationId: string, lineId: string, updates: Partial<DialogueLine>) => void;
   deleteDialogueLine: (questId: string, conversationId: string, lineId: string) => void;
   reorderDialogue: (questId: string, conversationId: string, fromIndex: number, toIndex: number) => void;
+  moveDialogueLine: (sourceQuestId: string, sourceConvId: string, lineId: string, targetQuestId: string, targetConvId: string, targetIndex: number) => void;
   addAnswer: (questId: string, conversationId: string, lineId: string, answer: Omit<Answer, 'id'>) => void;
   updateAnswer: (questId: string, conversationId: string, lineId: string, answerId: string, updates: Partial<Answer>) => void;
   deleteAnswer: (questId: string, conversationId: string, lineId: string, answerId: string) => void;
@@ -46,7 +47,7 @@ const getInitialData = (): AppData => {
       return {
         currentVersion: 'Default',
         versions: {
-          v1: { ...parsedData.v1, name: 'Default', color: VERSION_COLORS[0] },
+          v1: { ...parsedData.v1, name: 'default', color: VERSION_COLORS[0], folderPath: parsedData.v1.folderPath || '~/.QuestHelper/default/' }
         },
       };
     }
@@ -63,11 +64,26 @@ const getInitialData = (): AppData => {
             activeConversationId: parsedData.activeConversationId,
             name: 'Default',
             color: VERSION_COLORS[0],
+            folderPath: '~/.QuestHelper/default/'
           },
         },
       };
     }
-    
+
+    if (parsedData.versions) {
+      const migratedVersions: { [key: string]: VersionData } = {};
+      Object.entries(parsedData.versions).forEach(([key, version]: [string, any]) => {
+        migratedVersions[key] = {
+          ...version,
+          folderPath: version.folderPath || `~/.QuestHelper/${version.title}/`,
+        };
+      });
+      return {
+        ...parsedData,
+        versions: migratedVersions,
+      };
+    }
+
     return parsedData;
   }
 
@@ -115,6 +131,7 @@ const createDefaultVersionData = (name: string, color: string): VersionData => {
     activeConversationId: defaultConversation.id,
     name,
     color,
+    folderPath: '~/.QuestHelper/default/'
   };
 };
 
@@ -126,6 +143,7 @@ const createEmptyVersionData = (name: string, color: string): VersionData => {
     activeConversationId: null,
     name,
     color,
+    folderPath: `~/.QuestHelper/${name}/`,
   };
 };
 
@@ -152,7 +170,7 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const updateVersion = (versionId: string, updates: { name?: string; color?: string }) => {
+  const updateVersion = (versionId: string, updates: { name?: string; color?: string; folderPath?: string }) => {
     setData(prev => ({
       ...prev,
       versions: {
@@ -635,6 +653,68 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const moveDialogueLine = (
+    sourceQuestId: string,
+    sourceConvId: string,
+    lineId: string,
+    targetQuestId: string,
+    targetConvId: string,
+    targetIndex: number
+  ) => {
+    setData(prev => {
+      const currentVer = prev.versions[prev.currentVersion];
+      
+      // Find and remove the line from source
+      let movedLine: DialogueLine | null = null;
+      const questsAfterRemoval = currentVer.quests.map(q => {
+        if (q.id !== sourceQuestId) return q;
+        return {
+          ...q,
+          conversations: q.conversations.map(c => {
+            if (c.id !== sourceConvId) return c;
+            const lineToMove = c.dialogue.find(l => l.id === lineId);
+            if (lineToMove) movedLine = lineToMove;
+            return {
+              ...c,
+              dialogue: c.dialogue.filter(l => l.id !== lineId),
+            };
+          }),
+        };
+      });
+      
+      if (!movedLine) return prev;
+      
+      // Insert the line into target
+      const finalQuests = questsAfterRemoval.map(q => {
+        if (q.id !== targetQuestId) return q;
+        return {
+          ...q,
+          conversations: q.conversations.map(c => {
+            if (c.id !== targetConvId) return c;
+            const newDialogue = [...c.dialogue];
+            newDialogue.splice(targetIndex, 0, movedLine!);
+            return {
+              ...c,
+              dialogue: newDialogue,
+            };
+          }),
+        };
+      });
+      
+      return {
+        ...prev,
+        versions: {
+          ...prev.versions,
+          [prev.currentVersion]: {
+            ...currentVer,
+            quests: finalQuests,
+            activeConversationId: targetConvId,
+          },
+        },
+      };
+    });
+  };
+
   return (
     <DialogueContext.Provider
       value={{
@@ -659,6 +739,7 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
         updateDialogueLine,
         deleteDialogueLine,
         reorderDialogue,
+        moveDialogueLine,
         addAnswer,
         updateAnswer,
         deleteAnswer,

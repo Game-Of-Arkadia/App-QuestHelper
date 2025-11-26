@@ -39,6 +39,7 @@ export interface VersionData {
   activeConversationId: string | null;
   name: string;
   color: string;
+  folderPath: string;
 }
 
 export interface AppData {

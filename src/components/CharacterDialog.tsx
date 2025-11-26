@@ -6,12 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Character } from '@/types/dialogue';
 
-interface CharacterDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  character?: Character;
-  onSave: (character: Omit<Character, 'id'>) => void;
-}
+interface CharacterDialogProps { open: boolean; onOpenChange: (open: boolean) => void; character?: Character; onSave: (character: Omit<Character, 'id'>) => void; }
 
 export const CharacterDialog = ({ open, onOpenChange, character, onSave }: CharacterDialogProps) => {
   const [name, setName] = useState('');
@@ -42,23 +37,11 @@ export const CharacterDialog = ({ open, onOpenChange, character, onSave }: Chara
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Name of your character"
-            />
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name of your character"/>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="yaml">YAML Config</Label>
-            <Textarea
-              id="yaml"
-              value={yamlConfig}
-              onChange={(e) => setYamlConfig(e.target.value)}
-              placeholder="LuxDialog YAML configuration"
-              rows={8}
-              className="font-mono text-sm"
-            />
+            <Label htmlFor="yaml">YAML Configuration</Label>
+            <Textarea id="yaml" value={yamlConfig} onChange={(e) => setYamlConfig(e.target.value)} placeholder="LuxDialog YAML configuration" rows={8} className="font-mono text-sm"/>
           </div>
         </div>
         <DialogFooter>
