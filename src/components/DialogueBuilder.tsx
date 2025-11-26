@@ -235,13 +235,6 @@ export const DialogueBuilder = () => {
         toast({ title: 'Added Line', description: 'Shortcut: Ctrl + Enter' });
         return;
       }
-      // Ctrl + Shift + Enter -> Create new conversation
-      if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
-        e.preventDefault();
-        setIsAddingConversation(true);
-        toast({ title: 'Created conversation', description: 'Shortcut: Ctrl + Shift + Enter' });
-        return;
-      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);

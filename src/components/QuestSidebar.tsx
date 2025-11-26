@@ -6,6 +6,7 @@ import { Plus, FolderOpen, MessageSquare, Trash2, ChevronDown, ChevronRight } fr
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useDroppable } from '@dnd-kit/core';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export const QuestSidebar = () => {
   const { data, addQuest, addConversation, setActiveQuest, setActiveConversation, deleteConversation} = useDialogue();
@@ -47,11 +48,10 @@ export const QuestSidebar = () => {
     }
   };
 
-  const toggleQuestCollapse = (questId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleQuestCollapse = (questId: string, open: boolean) => {
     setCollapsedQuests(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(questId)) {
+      if (open) {
         newSet.delete(questId);
       } else {
         newSet.add(questId);
@@ -65,20 +65,7 @@ export const QuestSidebar = () => {
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-sm text-foreground">Workspace</h2>
-          <Button size="sm" variant="outline" onClick={() => setIsAddingQuest(true)} className="h-7">
-            <Plus className="h-3 w-3 mr-1" />
-            Add Quest
-          </Button>
         </div>
-
-        {isAddingQuest && (
-          <div className="flex gap-2">
-            <Input value={newQuestTitle} onChange={(e) => setNewQuestTitle(e.target.value)} placeholder="Quest title..." className="h-8 text-sm" onKeyDown={(e) => e.key === 'Enter' && handleAddQuest()} autoFocus/>
-            <Button size="sm" onClick={handleAddQuest} className="h-8">
-              Add
-            </Button>
-          </div>
-        )}
       </div>
 
       <ScrollArea className="flex-1">
@@ -86,17 +73,20 @@ export const QuestSidebar = () => {
           {currentVersionData.quests.map((quest) => {
             const isCollapsed = collapsedQuests.has(quest.id);
             return (
-              <div key={quest.id} className="border border-border rounded-lg overflow-hidden bg-background">
-              <div className={`flex items-center gap-2 p-2 cursor-pointer hover:bg-muted/50 transition-colors ${currentVersionData.activeQuestId === quest.id ? 'bg-accent/10' : ''}`} onClick={() => setActiveQuest(quest.id)}>
-                <button onClick={(e) => toggleQuestCollapse(quest.id, e)} className="flex-shrink-0 hover:bg-muted rounded p-0.5 transition-colors" >
-                    {isCollapsed ? (
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </button>
-                <FolderOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span className="text-sm font-medium flex-1 truncate">{quest.title}</span>
+              <Collapsible
+                key={quest.id}
+                open={!isCollapsed}
+                onOpenChange={(open) => toggleQuestCollapse(quest.id, open)}
+                className="border border-border rounded-lg overflow-hidden bg-background"
+              >
+              <div className={`flex items-center gap-2 p-2 cursor-pointer hover:bg-muted/50 transition-all ${currentVersionData.activeQuestId === quest.id ? 'bg-accent/10' : ''} ${isCollapsed ? 'opacity-60' : 'opacity-100'}`} onClick={() => setActiveQuest(quest.id)}>
+                <CollapsibleTrigger asChild>
+                    <button onClick={(e) => e.stopPropagation()} className="flex-shrink-0 hover:bg-muted rounded p-0.5 transition-all">
+                      <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${!isCollapsed ? 'rotate-90' : ''}`} />
+                    </button>
+                  </CollapsibleTrigger>
+                  <FolderOpen className={`h-4 w-4 text-muted-foreground flex-shrink-0 transition-all ${isCollapsed ? 'h-3.5 w-3.5' : ''}`} />
+                  <span className={`text-sm font-medium flex-1 truncate transition-all ${isCollapsed ? 'text-xs' : ''}`}>{quest.title}</span>
                 <Button size="sm" variant="ghost" onClick={(e) => {e.stopPropagation(); setIsAddingConvInQuest(quest.id);}} className="h-6 w-6 p-0">
                   <Plus className="h-3 w-3" />
                 </Button>
@@ -111,7 +101,7 @@ export const QuestSidebar = () => {
                 </div>
               )}
 
-              {!isCollapsed && (
+              <CollapsibleContent className="transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                   <div className="border-t border-border">
                     {quest.conversations && quest.conversations.length > 0 ? (
                       quest.conversations.map((conv) => (
@@ -144,8 +134,8 @@ export const QuestSidebar = () => {
                       </div>
                     )}
                   </div>
-                )}
-            </div>
+                </CollapsibleContent>
+              </Collapsible>
             );
           })}
 
