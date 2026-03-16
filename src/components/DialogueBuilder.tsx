@@ -161,6 +161,7 @@ export const DialogueBuilder = () => {
   const handleExport = () => {
     const zip = new JSZip();
     const sanitizedQuestTitle = activeQuest.title.trim().replace(/\s+/g, '_');
+    const sanitizedVersionName = currentVersionData.name.trim().replace(/\s+/g, '_');
     const questFolder = zip.folder(sanitizedQuestTitle);
 
     activeQuest.conversations.forEach((conv) => {
@@ -188,7 +189,7 @@ export const DialogueBuilder = () => {
         });
         if (nextLineExists && line.linkedToNext !== false) {
           yamlContent += `  "2":\n    "post-actions":\n`;
-          yamlContent += `      - "${sanitizedQuestTitle}/${sanitizedConvTitle}/${index + 2} @redirect"\n`;
+          yamlContent += `      - "${sanitizedVersionName}/${sanitizedQuestTitle}/${sanitizedConvTitle}/${index + 2} @redirect"\n`;
         }
         if (line.isQuestion && line.answers && line.answers.length > 0) {
           yamlContent += `Answers:\n`;
@@ -199,9 +200,9 @@ export const DialogueBuilder = () => {
 
             if (linkedConv) {
               const linkedConvTitle = linkedConv.title.trim().replace(/\s+/g, '_');
-              actionPath = `${sanitizedQuestTitle}/${linkedConvTitle}/1 @redirect`;
+              actionPath = `$${sanitizedVersionName}/${sanitizedQuestTitle}/${linkedConvTitle}/1 @redirect`;
             } else if (nextLineExists) {
-              actionPath = `${sanitizedQuestTitle}/${sanitizedConvTitle}/${index + 2} @redirect`;
+              actionPath = `${sanitizedVersionName}/${sanitizedQuestTitle}/${sanitizedConvTitle}/${index + 2} @redirect`;
             }
             yamlContent += `  '${answerNumber}':\n`;
             yamlContent += `    text: "${answer.text.replace(/"/g, '\\"')}"\n`;
