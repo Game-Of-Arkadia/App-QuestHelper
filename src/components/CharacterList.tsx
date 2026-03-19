@@ -8,13 +8,15 @@ import { toast } from '@/hooks/use-toast';
 
 export const CharacterList = () => {
   const { data, addCharacter, updateCharacter, deleteCharacter } = useDialogue();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCharacter, setEditingCharacter] = useState<Character | undefined>();
+
   const currentVersionData = data.versions[data.currentVersion];
   const versionColor = currentVersionData?.color;
 
-  if (!currentVersionData)
+  if (!currentVersionData) {
     return null;
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCharacter, setEditingCharacter] = useState<Character | undefined>();
+  }
 
   const handleAdd = () => {
     setEditingCharacter(undefined);
@@ -46,39 +48,99 @@ export const CharacterList = () => {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between px-2">
-        <h2 className="text-sm font-semibold text-foreground">Characters</h2>
-        <Button size="sm" variant="ghost" onClick={handleAdd} className="h-7 w-7 p-0">
-          <Plus className="h-4 w-4" />
+    <div
+      className="space-y-3"
+    >
+      <div
+        className="flex items-center justify-between px-2"
+      >
+        <h2
+          className="text-sm font-semibold text-foreground"
+        >
+          Characters
+        </h2>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleAdd}
+          className="h-7 w-7 p-0"
+        >
+          <Plus
+            className="h-4 w-4"
+          />
         </Button>
       </div>
 
-      <div className="space-y-1">
+      <div
+        className="space-y-1"
+      >
         {currentVersionData.characters.map((character) => (
-          <div key={character.id} className="group flex items-start gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-opacity-50" style={{ '--hover-color': versionColor } as React.CSSProperties} onMouseEnter={(e) => { if (versionColor) { e.currentTarget.style.backgroundColor = versionColor + '20'; } }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; }}>
-            <UserCircle className="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm text-foreground truncate">{character.name}</div>
+          <div
+            key={character.id}
+            className="group flex items-start gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-opacity-50"
+            style={{ '--hover-color': versionColor } as React.CSSProperties}
+            onMouseEnter={(e) => {
+              if (versionColor) {
+                e.currentTarget.style.backgroundColor = versionColor + '20';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '';
+            }}
+          >
+            <UserCircle
+              className="h-5 w-5 mt-0.5 text-muted-foreground flex-shrink-0"
+            />
+            <div
+              className="flex-1 min-w-0"
+            >
+              <div
+                className="font-medium text-sm text-foreground truncate"
+              >
+                {character.name}
+              </div>
               {character.yamlConfig && (
-                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 font-mono">
+                <p
+                  className="text-xs text-muted-foreground line-clamp-2 mt-0.5 font-mono"
+                >
                   {character.yamlConfig}
                 </p>
               )}
             </div>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button size="sm" variant="ghost" onClick={() => handleEdit(character)} className="h-7 w-7 p-0">
-                <Edit2 className="h-3.5 w-3.5" />
+            <div
+              className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleEdit(character)}
+                className="h-7 w-7 p-0"
+              >
+                <Edit2
+                  className="h-3.5 w-3.5"
+                />
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => handleDelete(character.id)} className="h-7 w-7 p-0 text-destructive hover:text-destructive" >
-                <Trash2 className="h-3.5 w-3.5" />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleDelete(character.id)}
+                className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+              >
+                <Trash2
+                  className="h-3.5 w-3.5"
+                />
               </Button>
             </div>
           </div>
         ))}
       </div>
 
-      <CharacterDialog open={dialogOpen} onOpenChange={setDialogOpen} character={editingCharacter} onSave={handleSave}/>
+      <CharacterDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        character={editingCharacter}
+        onSave={handleSave}
+      />
     </div>
   );
 };
