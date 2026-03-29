@@ -4,17 +4,17 @@ QuestHelper is a WebApp that allows you to easily create the LuxDialogues config
 
 ## 🚀 Key Features of QuestHelper
 
--⚙️ **Multi-Conversations & Multiple Quests** : Manage multiple conversations and quests within each adventure, offering a rich and dynamic experience.
+- **Multi-Conversations & Multiple Quests** : Manage multiple conversations and quests within each adventure, offering a rich and dynamic experience.
 
--🧩 **Create Interactive Dialogues** : Easily add custom dialogues for your characters, including interactive questions, redirections, and player choices.
+- **Create Interactive Dialogues** : Easily add custom dialogues for your characters, including interactive questions, redirections, and player choices.
 
--🎭 **Customizable Characters & Dialogue Presets** : Create and manage multiple characters with dialogue presets, enabling varied interactions tailored to each scenario.
+- **Customizable Characters & Dialogue Presets** : Create and manage multiple characters with dialogue presets, enabling varied interactions tailored to each scenario.
 
--✍️ **Dynamic Character Name Editing** : Easily modify character names within dialogues for maximum flexibility, depending on the game's context.
+- **Dynamic Character Name Editing** : Easily modify character names within dialogues for maximum flexibility, depending on the game's context.
 
--🛡️ **Fully Local** : All your data is securely stored in your browser, with nothing leaving your machine.
+- **Interactive data** : All the data is stored on the server, so multiple users can edit quests at the same time.
 
--📱 **Responsive Design** : Enjoy a seamless experience across Desktop PC, Laptop, and Mobile devices.
+- **Responsive Design** : Enjoy a seamless experience across Desktop PC, Laptop, and Mobile devices.
 
 
 ## 🛠️ How to Install 
@@ -47,6 +47,10 @@ After installation, you can start QuestHelper by executing:
 ```bash
 npm run app
 ```
+Launch the Backend server in another terminal using:
+```bash
+npm run server
+```
 
 This will start the QuestHelper server, which you can access at [http://localhost:8082](http://localhost:8082)
 
@@ -63,15 +67,24 @@ You can customize settings using environment variables:
 | `QSTH_PORT` | Set the port number | `8082` |
 | `QSTH_ALLOWED_HOST` | Controls allowed hosts (`true` to accept any host) | `true` |
 | `QSTH_BASE_URL` | Subfolder name when hosting under a subpath (ex: use `app` for site.com/app). Leave empty for root. | `''` |
+| `QSTH_API_URL` | API URL for backend api services ( empty to use the same host) | `http://localhost:3001` |
+
 
 Example:
 ```bash
 # bind to all interfaces on port 3000, allow any host, and serve under /questhelper
+npm run server& &&
 QSTH_HOST='0.0.0.0' QSTH_PORT=3000 QSTH_ALLOWED_HOST='true' QSTH_BASE_URL='questhelper' npm run app
 ```
 
 Since the app normally uses the root (`/`) path, you can safely use a custom domain or reverse proxy without conflicts. If you set `QSTH_BASE_URL`, ensure your reverse proxy forwards the subpath (and rewrites requests) to the app accordingly.
 
+## API Endpoints
+
+You can retrieve all the data using the API with:
+- `GET /api/data` - Retrieve all application data
+- `POST /api/data` - Save application data
+- `GET /api/health` - Health check endpoint
 
 ## 💬 Support
 
