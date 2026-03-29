@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), ['QUESTHELPER_HOST', 'QUESTHELPER_PORT', 'QSTH_BASE_URL', 'QSTH_ALLOWED_HOSTS']);
+  const env = loadEnv(mode, process.cwd(), ['QUESTHELPER_HOST', 'QUESTHELPER_PORT', 'QSTH_BASE_URL', 'QSTH_ALLOWED_HOSTS', 'QSTH_API_URL']);
 
   const getPort = () => {
     const p = env.QUESTHELPER_PORT ?? process.env.QUESTHELPER_PORT;
