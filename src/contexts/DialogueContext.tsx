@@ -32,61 +32,83 @@ interface DialogueContextType {
 
 const DialogueContext = createContext<DialogueContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'Cookie_thats_stealing_all_your_data'; // W name for the storage key ?
-
 const VERSION_COLORS = ['#f97316', '#22c55e', '#ec4899', '#3b82f6', '#a855f7', '#eab308', '#14b8a6', '#ef4444'];
+const API_URL = import.meta.env.QSTH_API_URL || 'http://localhost:3001';
 
-
-const getInitialData = (): AppData => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    const parsedData = JSON.parse(stored);
-
-    // Migrate from old version structure to new dynamic structure
-    if (parsedData.version && parsedData.v1) {
-      return {
-        currentVersion: 'Default',
-        versions: {
-          v1: { ...parsedData.v1, name: 'default', color: VERSION_COLORS[0], folderPath: parsedData.v1.folderPath || '~/.QuestHelper/default/' }
-        },
-      };
+const fetchDataFromServer = async (): Promise<AppData | null> => {
+  try {
+    const response = await fetch(`${API_URL}/api/data`);
+    if (response.ok) {
+      const data = await response.json();
+      return migrateDataIfNeeded(data);
     }
+  } catch (error) {
+    console.error('Error fetching data from server:', error);
+  }
+  return null;
+};
 
-    // Migrate from very old structure (no versions)
-    if (parsedData.characters && !parsedData.currentVersion) {
-      return {
-        currentVersion: 'Default',
-        versions: {
-          v1: {
-            characters: parsedData.characters,
-            quests: parsedData.quests,
-            activeQuestId: parsedData.activeQuestId,
-            activeConversationId: parsedData.activeConversationId,
-            name: 'Default',
-            color: VERSION_COLORS[0],
-            folderPath: '~/.QuestHelper/default/'
-          },
-        },
-      };
-    }
+const saveDataToServer = async (data: AppData): Promise<boolean> => {
+  try {
+    const response = await fetch(`${API_URL}/api/data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Error saving data to server:', error);
+    return false;
+  }
+};
 
-    if (parsedData.versions) {
-      const migratedVersions: { [key: string]: VersionData } = {};
-      Object.entries(parsedData.versions).forEach(([key, version]: [string, any]) => {
-        migratedVersions[key] = {
-          ...version,
-          folderPath: version.folderPath || `~/.QuestHelper/${version.title}/`,
-        };
-      });
-      return {
-        ...parsedData,
-        versions: migratedVersions,
-      };
-    }
-
-    return parsedData;
+const migrateDataIfNeeded = (data: AppData): AppData => {
+  if ((data as any).version && (data as any).v1) {
+    return {
+      currentVersion: 'Default',
+      versions: {
+        v1: { ...(data as any).v1, name: 'default', color: VERSION_COLORS[0], folderPath: (data as any).v1.folderPath || '~/.QuestHelper/default/' }
+      },
+    };
   }
 
+  if ((data as any).characters && !data.currentVersion) {
+    return {
+      currentVersion: 'Default',
+      versions: {
+        v1: {
+          characters: (data as any).characters,
+          quests: (data as any).quests,
+          activeQuestId: (data as any).activeQuestId,
+          activeConversationId: (data as any).activeConversationId,
+          name: 'Default',
+          color: VERSION_COLORS[0],
+          folderPath: '~/.QuestHelper/default/'
+        },
+      },
+    };
+  }
+
+  if (data.versions) {
+    const migratedVersions: { [key: string]: VersionData } = {};
+    Object.entries(data.versions).forEach(([key, version]: [string, any]) => {
+      migratedVersions[key] = {
+        ...version,
+        folderPath: version.folderPath || `~/.QuestHelper/${version.name || version.title}/`,
+      };
+    });
+    return {
+      ...data,
+      versions: migratedVersions,
+    };
+  }
+
+  return data;
+};
+
+const getInitialData = (): AppData => {
   return {
     currentVersion: 'Default',
     versions: {
@@ -149,10 +171,24 @@ const createEmptyVersionData = (name: string, color: string): VersionData => {
 
 export const DialogueProvider = ({ children }: { children: ReactNode }) => {
   const [data, setData] = useState<AppData>(getInitialData);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data]);
+    const loadData = async () => {
+      const serverData = await fetchDataFromServer();
+      if (serverData) {
+        setData(serverData);
+      }
+      setIsLoaded(true);
+    };
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveDataToServer(data);
+    }
+  }, [data, isLoaded]);
 
   const setVersion = (versionId: string) => {
     setData(prev => ({ ...prev, currentVersion: versionId }));
@@ -745,7 +781,7 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
         deleteAnswer,
       }}
     >
-      {children}
+      {isLoaded ? children : <div>Loading...</div>}
     </DialogueContext.Provider>
   );
 };
