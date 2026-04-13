@@ -66,19 +66,21 @@ const saveDataToServer = async (data: AppData): Promise<boolean> => {
 
 const migrateDataIfNeeded = (data: AppData): AppData => {
   if ((data as any).version && (data as any).v1) {
+    const versionKey = 'v1';
     return {
-      currentVersion: 'Default',
+      currentVersion: versionKey,
       versions: {
-        v1: { ...(data as any).v1, name: 'default', color: VERSION_COLORS[0], folderPath: (data as any).v1.folderPath || '~/.QuestHelper/default/' }
+        [versionKey]: { ...(data as any).v1, name: 'default', color: VERSION_COLORS[0], folderPath: (data as any).v1.folderPath || '~/.QuestHelper/default/' }
       },
     };
   }
 
   if ((data as any).characters && !data.currentVersion) {
+    const versionKey = 'v1';
     return {
-      currentVersion: 'Default',
+      currentVersion: versionKey,
       versions: {
-        v1: {
+        [versionKey]: {
           characters: (data as any).characters,
           quests: (data as any).quests,
           activeQuestId: (data as any).activeQuestId,
@@ -99,8 +101,23 @@ const migrateDataIfNeeded = (data: AppData): AppData => {
         folderPath: version.folderPath || `~/.QuestHelper/${version.name || version.title}/`,
       };
     });
+
+    const versionScore = (version: VersionData) =>
+      version.characters.length + version.quests.length + version.quests.reduce((total, quest) => {
+        return total + quest.conversations.length + quest.conversations.reduce((conversationTotal, conversation) => {
+          return conversationTotal + conversation.dialogue.length;
+        }, 0);
+      }, 0);
+
+    const fallbackVersion =
+      Object.entries(migratedVersions).sort(([, a], [, b]) => versionScore(b) - versionScore(a))[0]?.[0] || 'v1';
+
+    const validCurrentVersion =
+      data.currentVersion && migratedVersions[data.currentVersion] ? data.currentVersion : fallbackVersion;
+
     return {
       ...data,
+      currentVersion: validCurrentVersion,
       versions: migratedVersions,
     };
   }
@@ -110,7 +127,7 @@ const migrateDataIfNeeded = (data: AppData): AppData => {
 
 const getInitialData = (): AppData => {
   return {
-    currentVersion: 'Default',
+    currentVersion: 'v1',
     versions: {
       v1: createDefaultVersionData('Default', VERSION_COLORS[0]),
     },
@@ -121,14 +138,13 @@ const getInitialData = (): AppData => {
 const ambiantChar: Character = {
   id: generateUUID(),
   name: 'ambiant',
-  yamlConfig: "Settings:\n typing-speed: 1 # Ticks(Second/20)\n range: 3\n effect: Freeze # Slowness / Freeze\n answer-numbers: false\n prevent-exit: false\n character-name: false\n character-image: false\n background-fog: true\nSounds:\n typing: luxdialogues:luxdialogues.sounds.typing\n selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n name: 20\n dialogue-background: 0\n dialogue-line: 10\n answer-background: 90\n answer-line: 8\n arrow: -7\n character: -16\nCharacter:\n name: Ambiant"
-  //yamlConfig: "Settings:\n  typing-speed: 1 # Ticks(Second/20)\n  range: 3\n  effect: Freeze # Slowness / Freeze\n  answer-numbers: false\n  prevent-exit: false\n  character-name: false\n  character-image: false\n  background-fog: true\nSounds:\n  typing: luxdialogues:luxdialogues.sounds.typing\n  selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n  name: 20\n  dialogue-background: 0\n  dialogue-line: 10\n  answer-background: 90\n  answer-line: 8\n  arrow: -7\n  character: -16\nCharacter:\n  name: Ambiant\nImages:\n  character: tavernier-avatar\n  arrow: hand\n  dialogue-background: dialogue-background\n  answer-background: answer-background\n  name-start: name-start\n  name-mid: name-mid\n  name-end: name-end\n  fog: fog\nColors:\n  name: '#4f4a3e'\n  name-background: '#f8ffe0'\n  dialogue: '#4f4a3e'\n  dialogue-background: '#f8ffe0'\n  answer: '#4f4a3e'\n  answer-background: '#f8ffe0'\n  arrow: '#cdff29'\n  selected: '#4f4a3e'\n  fog: '#000000'\n",
+  yamlConfig: "Settings:\n typing-speed: 1 # Ticks(Second/20)\n range: 3\n effect: Freeze # Slowness / Freeze\n answer-numbers: false\n prevent-exit: false\n character-name: false\n character-image: false\n background-fog: true\nSounds:\n typing: luxdialogues:luxdialogues.sounds.typing\n selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n name: 20\n dialogue-background: 0\n dialogue-line: 10\n answer-background: 90\n answer-line: 8\n arrow: -7\n character: -16\nCharacter:\n name: Ambiant\nImages:\n character: tavernier-avatar\n arrow: hand\n dialogue-background: dialogue-background\n answer-background: answer-background\n name-start: name-start\n name-mid: name-mid\n name-end: name-end\n fog: fog\nColors:\n name: '#4f4a3e'\n name-background: '#f8ffe0'\n dialogue: '#4f4a3e'\n dialogue-background: '#f8ffe0'\n answer: '#4f4a3e'\n answer-background: '#f8ffe0'\n arrow: '#cdff29'\n selected: '#4f4a3e'\n fog: '#000000'"
 };
 
 const defaultChar: Character = {
   id: generateUUID(),
   name: "default",
-  yamlConfig: "Settings:\n typing-speed: 1 # Ticks(Second/20)\n range: 3\n effect: Freeze # Slowness / Freeze\n answer-numbers: false\n prevent-exit: false\n character-name: true\n character-image: false\n background-fog: true\nSounds:\n typing: luxdialogues:luxdialogues.sounds.typing\n selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n name: 20\n dialogue-background: 0\n dialogue-line: 10\n answer-background: 90\n answer-line: 8\n arrow: -7\n character: -16\nCharacter:\n name: Default"
+  yamlConfig: "Settings:\n typing-speed: 1 # Ticks(Second/20)\n range: 3\n effect: Freeze # Slowness / Freeze\n answer-numbers: false\n prevent-exit: false\n character-name: true\n character-image: false\n background-fog: true\nSounds:\n typing: luxdialogues:luxdialogues.sounds.typing\n selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n name: 20\n dialogue-background: 0\n dialogue-line: 10\n answer-background: 90\n answer-line: 8\n arrow: -7\n character: -16\nCharacter:\n name: Default\nImages:\n character: tavernier-avatar\n arrow: hand\n dialogue-background: dialogue-background\n answer-background: answer-background\n name-start: name-start\n name-mid: name-mid\n name-end: name-end\n fog: fog\nColors:\n name: '#4f4a3e'\n name-background: '#f8ffe0'\n dialogue: '#4f4a3e'\n dialogue-background: '#f8ffe0'\n answer: '#4f4a3e'\n answer-background: '#f8ffe0'\n arrow: '#cdff29'\n selected: '#4f4a3e'\n fog: '#000000'"
   //yamlConfig: "Settings:\n  typing-speed: 1 # Ticks(Second/20)\n  range: 3\n  effect: Freeze # Slowness / Freeze\n  answer-numbers: false\n  prevent-exit: false\n  character-name: true\n  character-image: false\n  background-fog: true\nSounds:\n  typing: luxdialogues:luxdialogues.sounds.typing\n  selection: luxdialogues:luxdialogues.sounds.selection\nOffsets:\n  name: 20\n  dialogue-background: 0\n  dialogue-line: 10\n  answer-background: 90\n  answer-line: 8\n  arrow: -7\n  character: -16\nCharacter:\n  name:  Default\nImages:\n  character: tavernier-avatar\n  arrow: hand\n  dialogue-background: dialogue-background\n  answer-background: answer-background-large\n  name-start: name-start\n  name-mid: name-mid\n  name-end: name-end\n  fog: fog\nColors:\n  name: '#4f4a3e'\n  name-background: '#f8ffe0'\n  dialogue: '#4f4a3e'\n  dialogue-background: '#f8ffe0'\n  answer: '#4f4a3e'\n  answer-background: '#f8ffe0'\n  arrow: '#cdff29'\n  selected: '#4f4a3e'\n  fog: '#000000'\n",
 };
 
