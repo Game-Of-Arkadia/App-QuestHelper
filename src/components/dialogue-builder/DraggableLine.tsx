@@ -5,9 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GripVertical, HelpCircle, Trash2 } from 'lucide-react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { ArrowUp, ArrowDown, HelpCircle, Trash2 } from 'lucide-react';
 import { DialogueLine } from '@/types/dialogue';
 import { TextPreview } from './TextPreview';
 import { AnswerSection } from './AnswerSection';
@@ -15,58 +13,61 @@ import { AnswerSection } from './AnswerSection';
 interface DraggableLineProps {
   line: DialogueLine;
   index: number;
+  totalLines: number;
   questId: string;
   convId: string;
   character: any;
   onUpdate: (lineId: string, updates: Partial<DialogueLine>) => void;
   onDelete: (lineId: string) => void;
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
 }
 
 export const DraggableLine = ({
   line,
   index,
+  totalLines,
   questId,
   convId,
   character,
   onUpdate,
   onDelete,
+  onMoveUp,
+  onMoveDown,
 }: DraggableLineProps) => {
   const { data, addAnswer, updateAnswer, deleteAnswer } = useDialogue();
   const currentVersionData = data.versions[data.currentVersion];
   const activeQuest = currentVersionData.quests.find((q) => q.id === questId);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: `line-${line.id}`,
-    data: { type: 'line', line, questId, convId, index },
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
   return (
     <div
-      ref={setNodeRef}
-      style={style}
       className="flex gap-3 p-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow"
     >
       <div
-        className="flex items-start pt-2 cursor-grab active:cursor-grabbing"
-        {...attributes}
-        {...listeners}
+        className="flex flex-col items-center gap-1 pt-2"
       >
-        <GripVertical
-          className="h-5 w-5 text-muted-foreground"
-        />
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onMoveUp(index)}
+          disabled={index === 0}
+          className="h-7 w-7 p-0"
+        >
+          <ArrowUp
+            className="h-4 w-4"
+          />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onMoveDown(index)}
+          disabled={index === totalLines - 1}
+          className="h-7 w-7 p-0"
+        >
+          <ArrowDown
+            className="h-4 w-4"
+          />
+        </Button>
       </div>
 
       <div
@@ -141,7 +142,7 @@ export const DraggableLine = ({
               <HelpCircle
                 className="h-3.5 w-3.5"
               />
-              Activate question
+              User choice
             </Label>
           </div>
         </div>
