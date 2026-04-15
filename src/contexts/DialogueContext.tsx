@@ -4,6 +4,7 @@ import { generateUUID } from '@/lib/utils';
 
 interface DialogueContextType {
   data: AppData;
+  updateData: (updater: (prev: AppData) => AppData) => void;
   setVersion: (versionId: string) => void;
   addVersion: (name: string, color: string) => void;
   updateVersion: (versionId: string, updates: { name?: string; color?: string; folderPath?: string }) => void;
@@ -771,6 +772,7 @@ export const DialogueProvider = ({ children }: { children: ReactNode }) => {
     <DialogueContext.Provider
       value={{
         data,
+        updateData: setData,
         setVersion,
         addVersion,
         updateVersion,

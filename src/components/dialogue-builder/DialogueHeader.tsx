@@ -9,24 +9,30 @@ interface DialogueHeaderProps {
   onExport: () => void;
 }
 
-export const DialogueHeader = ({ quest, onUpdateQuest, onExport }: DialogueHeaderProps) => (
-  <div
-    className="flex items-center justify-between p-4 border-b border-border bg-card"
-  >
-    <Input
-      value={quest.title}
-      onChange={(e) => onUpdateQuest(quest.id, { title: e.target.value })}
-      className="text-lg font-semibold max-w-md border-none shadow-none px-0 focus-visible:ring-0"
-    />
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={onExport}
+export const DialogueHeader = ({ quest, onUpdateQuest, onExport }: DialogueHeaderProps) => {
+  return (
+    <div
+      className="flex items-center justify-between p-4 border-b border-border bg-card"
     >
-      <Download
-        className="h-4 w-4 mr-2"
+      <Input
+        value={quest.title}
+        onChange={(e) => onUpdateQuest(quest.id, { title: e.target.value })}
+        className="text-lg font-semibold max-w-md border-none shadow-none px-0 focus-visible:ring-0"
       />
-      Export Quest
-    </Button>
-  </div>
-);
+      <div
+        className="flex gap-2"
+      >
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onExport}
+        >
+          <Download
+            className="h-4 w-4 mr-2"
+          />
+          Export Quest
+        </Button>
+      </div>
+    </div>
+  );
+};
