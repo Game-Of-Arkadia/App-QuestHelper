@@ -59,6 +59,16 @@ export const DialogueBuilder = () => {
     );
   }
 
+  const focusLastTextarea = () => {
+    setTimeout(() => {
+      const textareas = document.querySelectorAll('[data-dialogue-textarea]');
+      const lastTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
+      if (lastTextarea) {
+        lastTextarea.focus();
+      }
+    }, 50);
+  };
+
   const handleAddLine = () => {
     if (!activeConversation) {
       toast({ title: 'You must have selected a conversation before', variant: 'destructive' });
@@ -69,22 +79,40 @@ export const DialogueBuilder = () => {
       return;
     }
 
-    const lastLine = activeConversation.dialogue[activeConversation.dialogue.length - 1];
+    const nonAmbiantLines = activeConversation.dialogue.filter((line) => {
+      const char = currentVersionData.characters.find((c) => c.id === line.characterId);
+      return char?.name.toLowerCase() !== 'ambiant';
+    });
+    const lastNonAmbiantLine = nonAmbiantLines[nonAmbiantLines.length - 1];
 
     addDialogueLine(activeQuest.id, activeConversation.id, {
-      characterId: lastLine?.characterId || currentVersionData.characters[0].id,
-      displayName: lastLine?.displayName,
+      characterId: lastNonAmbiantLine?.characterId || currentVersionData.characters.find((c) => c.name.toLowerCase() !== 'ambiant')?.id || currentVersionData.characters[0].id,
+      displayName: lastNonAmbiantLine?.displayName,
       text: '',
       linkedToNext: true,
     });
 
-    setTimeout(() => {
-      const textareas = document.querySelectorAll('[data-dialogue-textarea]');
-      const lastTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
-      if (lastTextarea) {
-        lastTextarea.focus();
-      }
-    }, 50);
+    focusLastTextarea();
+  };
+  const handleAddAmbiant = () => {
+    if (!activeConversation) {
+      toast({ title: 'You must have selected a conversation before', variant: 'destructive' });
+      return;
+    }
+    const ambiantCharacter = currentVersionData.characters.find(
+      (c) => c.name.toLowerCase() === 'ambiant'
+    );
+    if (!ambiantCharacter) {
+      toast({ title: 'No ambiant character found.', variant: 'destructive' });
+      return;
+    }
+    addDialogueLine(activeQuest.id, activeConversation.id, {
+      characterId: ambiantCharacter.id,
+      displayName: undefined,
+      text: '',
+      linkedToNext: true,
+    });
+    focusLastTextarea();
   };
 
   const handleUpdateLine = (lineId: string, updates: Partial<DialogueLine>) => {
@@ -163,8 +191,19 @@ export const DialogueBuilder = () => {
             </div>
 
             <div
-              className="fixed bottom-4 right-4 z-10"
+              className="fixed bottom-4 right-4 z-10 flex gap-2"
             >
+              <Button
+                size="lg"
+                onClick={handleAddAmbiant}
+                variant="outline"
+                className="shadow-lg"
+              >
+                <Plus
+                  className="h-5 w-5 mr-2"
+                />
+                Add Ambiant
+              </Button>
               <Button
                 size="lg"
                 onClick={handleAddLine}
