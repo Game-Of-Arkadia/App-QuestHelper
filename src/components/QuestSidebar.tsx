@@ -5,52 +5,22 @@ import { Input } from '@/components/ui/input';
 import { Plus, FolderOpen, MessageSquare, Trash2, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { useDroppable } from '@dnd-kit/core';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 
-interface ConversationDropZoneProps {
-  questId: string;
-  conversationId: string;
-  children: React.ReactNode;
-}
-
-const ConversationDropZone = ({
-  questId,
-  conversationId,
-  children,
-}: ConversationDropZoneProps) => {
-  const { setNodeRef, isOver, active } = useDroppable({
-    id: `conversation-${questId}-${conversationId}`,
-    data: { type: 'conversation', questId, conversationId },
-  });
-  const isDraggingLine = active?.data?.current?.type === 'line';
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={isOver && isDraggingLine ? 'bg-accent/30 ring-2 ring-accent' : ''}
-    >
-      {children}
-    </div>
-  );
-};
 
 export const QuestSidebar = () => {
   const {
     data,
-    addQuest,
     addConversation,
     setActiveQuest,
     setActiveConversation,
     deleteConversation,
   } = useDialogue();
 
-  const [isAddingQuest, setIsAddingQuest] = useState(false);
-  const [newQuestTitle, setNewQuestTitle] = useState('');
   const [isAddingConvInQuest, setIsAddingConvInQuest] = useState<string | null>(null);
   const [newConvTitle, setNewConvTitle] = useState('');
   const [collapsedQuests, setCollapsedQuests] = useState<Set<string>>(new Set());
@@ -60,15 +30,6 @@ export const QuestSidebar = () => {
   if (!currentVersionData) {
     return null;
   }
-
-  const handleAddQuest = () => {
-    if (newQuestTitle.trim()) {
-      addQuest(newQuestTitle);
-      setNewQuestTitle('');
-      setIsAddingQuest(false);
-      toast({ title: 'Quest created' });
-    }
-  };
 
   const handleAddConversation = (questId: string) => {
     if (newConvTitle.trim()) {
@@ -214,44 +175,39 @@ export const QuestSidebar = () => {
                   >
                     {quest.conversations && quest.conversations.length > 0 ? (
                       quest.conversations.map((conv) => (
-                        <ConversationDropZone
+                        <div
                           key={conv.id}
-                          questId={quest.id}
-                          conversationId={conv.id}
+                          className={`group flex items-center gap-2 p-2 pl-6 cursor-pointer hover:bg-muted/50 transition-colors ${
+                            currentVersionData.activeConversationId === conv.id
+                              ? 'bg-accent/20'
+                              : ''
+                          }`}
+                          onClick={() => {
+                            setActiveQuest(quest.id);
+                            setActiveConversation(conv.id);
+                          }}
                         >
-                          <div
-                            className={`group flex items-center gap-2 p-2 pl-6 cursor-pointer hover:bg-muted/50 transition-colors ${
-                              currentVersionData.activeConversationId === conv.id
-                                ? 'bg-accent/20'
-                                : ''
-                            }`}
-                            onClick={() => {
-                              setActiveQuest(quest.id);
-                              setActiveConversation(conv.id);
-                            }}
+                          <MessageSquare
+                            className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0"
+                          />
+                          <span
+                            className="text-xs flex-1 truncate"
                           >
-                            <MessageSquare
-                              className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0"
+                            {conv.title}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) =>
+                              handleDeleteConversation(quest.id, conv.id, conv.title, e)
+                            }
+                            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:text-destructive"
+                          >
+                            <Trash2
+                              className="h-3 w-3"
                             />
-                            <span
-                              className="text-xs flex-1 truncate"
-                            >
-                              {conv.title}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) =>
-                                handleDeleteConversation(quest.id, conv.id, conv.title, e)
-                              }
-                              className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:text-destructive"
-                            >
-                              <Trash2
-                                className="h-3 w-3"
-                              />
-                            </Button>
-                          </div>
-                        </ConversationDropZone>
+                          </Button>
+                        </div>
                       ))
                     ) : (
                       <div
