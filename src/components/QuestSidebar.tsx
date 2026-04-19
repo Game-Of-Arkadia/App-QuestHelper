@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, FolderOpen, MessageSquare, Trash2, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 import {
   Collapsible,
@@ -23,9 +23,34 @@ export const QuestSidebar = () => {
 
   const [isAddingConvInQuest, setIsAddingConvInQuest] = useState<string | null>(null);
   const [newConvTitle, setNewConvTitle] = useState('');
-  const [collapsedQuests, setCollapsedQuests] = useState<Set<string>>(new Set());
+  const [collapsedQuests, setCollapsedQuests] = useState<Set<string>>(
+    () =>
+      new Set(
+        Object.values(data.versions).flatMap((version) =>
+          version.quests.map((quest) => quest.id)
+        )
+      )
+  );
 
   const currentVersionData = data.versions[data.currentVersion];
+
+  useEffect(() => {
+    setCollapsedQuests((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+
+      Object.values(data.versions).forEach((version) => {
+        version.quests.forEach((quest) => {
+          if (!next.has(quest.id)) {
+            next.add(quest.id);
+            changed = true;
+          }
+        });
+      });
+
+      return changed ? next : prev;
+    });
+  }, [data.versions]);
 
   if (!currentVersionData) {
     return null;
@@ -102,7 +127,12 @@ export const QuestSidebar = () => {
                   className={`flex items-center gap-2 p-2 cursor-pointer hover:bg-muted/50 transition-all ${
                     currentVersionData.activeQuestId === quest.id ? 'bg-accent/10' : ''
                   } ${isCollapsed ? 'opacity-60' : 'opacity-100'}`}
-                  onClick={() => setActiveQuest(quest.id)}
+                  onClick={() => {
+                    setActiveQuest(quest.id);
+                    if (isCollapsed) {
+                      toggleQuestCollapse(quest.id, true);
+                    }
+                  }}
                 >
                   <CollapsibleTrigger
                     asChild
