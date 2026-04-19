@@ -8,7 +8,6 @@ import { toast } from '@/hooks/use-toast';
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 
 
@@ -90,6 +89,10 @@ export const QuestSidebar = () => {
     });
   };
 
+  const handleQuestToggle = (questId: string, isCollapsed: boolean) => {
+    toggleQuestCollapse(questId, isCollapsed);
+  };
+
   return (
     <div
       className="w-80 border-r border-border bg-card flex flex-col"
@@ -134,32 +137,37 @@ export const QuestSidebar = () => {
                     }
                   }}
                 >
-                  <CollapsibleTrigger
-                    asChild
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuestToggle(quest.id, isCollapsed);
+                    }}
+                    className="flex-shrink-0 hover:bg-muted rounded p-0.5 transition-all"
                   >
-                    <button
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex-shrink-0 hover:bg-muted rounded p-0.5 transition-all"
-                    >
-                      <ChevronRight
-                        className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                          !isCollapsed ? 'rotate-90' : ''
-                        }`}
-                      />
-                    </button>
-                  </CollapsibleTrigger>
+                    <ChevronRight
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                        !isCollapsed ? 'rotate-90' : ''
+                      }`}
+                    />
+                  </button>
                   <FolderOpen
                     className={`h-4 w-4 text-muted-foreground flex-shrink-0 transition-all ${
                       isCollapsed ? 'h-3.5 w-3.5' : ''
                     }`}
                   />
-                  <span
-                    className={`text-sm font-medium flex-1 truncate transition-all ${
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuestToggle(quest.id, isCollapsed);
+                    }}
+                    className={`text-left text-sm font-medium flex-1 truncate transition-all ${
                       isCollapsed ? 'text-xs' : ''
                     }`}
                   >
                     {quest.title}
-                  </span>
+                  </button>
                   <Button
                     size="sm"
                     variant="ghost"
