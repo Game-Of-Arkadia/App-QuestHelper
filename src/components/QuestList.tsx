@@ -13,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { importQuestFromZip } from './dialogue-builder/importQuestFromZip';
 
 export const QuestList = () => {
   const {
@@ -22,14 +21,13 @@ export const QuestList = () => {
     deleteQuest,
     setActiveQuest,
     copyQuestFromVersion,
-    updateData,
   } = useDialogue();
 
   const [isAdding, setIsAdding] = useState(false);
   const [newQuestTitle, setNewQuestTitle] = useState('');
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [hoveredQuestId, setHoveredQuestId] = useState<string | null>(null);
-  const importInputRef = useRef<HTMLInputElement>(null);
 
   const currentVersionData = data.versions[data.currentVersion];
 
@@ -59,46 +57,18 @@ export const QuestList = () => {
     toast({ title: 'Quest copied' });
   };
 
-  const handleImportQuest = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportFolder = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const file = files[0];
+    const fullpath = files[0].webkitRelativePath;
+    const folderName = fullpath.split('/')[0];
+    addQuest(folderName);
 
-    try {
-      const importedQuest = await importQuestFromZip(file, currentVersionData.characters);
-
-      updateData((prev) => {
-        const version = prev.versions[prev.currentVersion];
-        if (!version) return prev;
-
-        return {
-          ...prev,
-          versions: {
-            ...prev.versions,
-            [prev.currentVersion]: {
-              ...version,
-              quests: [...version.quests, importedQuest],
-              activeQuestId: importedQuest.id,
-              activeConversationId: importedQuest.conversations[0]?.id || null,
-            },
-          },
-        };
-      });
-
-      toast({
-        title: 'Quest imported successfully',
-        description: importedQuest.title,
-      });
-    } catch (error) {
-      toast({
-        title: 'Quest import failed',
-        description: String(error),
-        variant: 'destructive',
-      });
-    } finally {
-      e.target.value = '';
-    }
+    toast({
+      title: 'Quest imported successfully',
+      description: `${files.length} files from "${folderName}"`,
+    });
   };
 
   const otherVersions = Object.entries(data.versions).filter(
@@ -142,9 +112,9 @@ export const QuestList = () => {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => importInputRef.current?.click()}
+            onClick={() => fileInputRef.current?.click()}
             className="h-7 w-7 p-0"
-            title="Import quest from ZIP"
+            title="Import from folder"
           >
             <Upload
               className="h-4 w-4"
@@ -252,10 +222,13 @@ export const QuestList = () => {
       </div>
 
       <input
-        ref={importInputRef}
+        ref={fileInputRef}
         type="file"
-        accept=".zip"
-        onChange={handleImportQuest}
+        // @ts-ignore
+        webkitdirectory=""
+        directory=""
+        multiple
+        onChange={handleImportFolder}
         className="hidden"
       />
 
@@ -285,7 +258,7 @@ export const QuestList = () => {
         className="flex-1"
       >
         <div
-          className="space-y-1 pr-2"
+          className="space-y-1 px-2"
         >
           {currentVersionData.quests.map((quest) => {
             const isActive = currentVersionData.activeQuestId === quest.id;
@@ -300,7 +273,7 @@ export const QuestList = () => {
             return (
               <div
                 key={quest.id}
-                className={`flex items-start justify-between p-2 pl-4 min-w-0 rounded-lg cursor-pointer transition-colors ${
+                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
                   isActive && !versionColor ? 'bg-accent text-accent-foreground' : ''
                 }`}
                 onClick={() => setActiveQuest(quest.id)}
@@ -309,13 +282,13 @@ export const QuestList = () => {
                 style={dynamicStyle}
               >
                 <div
-                  className="flex items-start gap-2 flex-1 min-w-0"
+                  className="flex items-center gap-2 flex-1 min-w-0"
                 >
                   <FolderOpen
                     className="h-4 w-4 flex-shrink-0"
                   />
                   <span
-                    className="block w-full text-sm font-medium whitespace-normal [overflow-wrap:anywhere] leading-snug"
+                    className="text-sm font-medium truncate"
                   >
                     {quest.title}
                   </span>
@@ -327,7 +300,7 @@ export const QuestList = () => {
                     e.stopPropagation();
                     handleDelete(quest.id, quest.title);
                   }}
-                  className="h-6 w-6 p-0 flex-shrink-0 self-start opacity-0 hover:opacity-100 hover:text-destructive"
+                  className="h-6 w-6 p-0 opacity-0 hover:opacity-100 hover:text-destructive"
                 >
                   <Trash2
                     className="h-3 w-3"

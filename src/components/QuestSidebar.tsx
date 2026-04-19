@@ -220,7 +220,8 @@ export const QuestSidebar = () => {
                               ? 'bg-accent/20'
                               : ''
                           }`}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setActiveQuest(quest.id);
                             setActiveConversation(conv.id);
                           }}
